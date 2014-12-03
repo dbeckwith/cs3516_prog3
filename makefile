@@ -1,16 +1,26 @@
+# Aditya Nivarthi
+# Make file Project 3
+
 CC=gcc
-CLIENT_NAME=client
-SERVER_NAME=server
 
-client: client.o
-	$(CC) client.o -c $(CLIENT_NAME)
+CFLAGS= -g -std=c99 -lpthread
 
+all: photo_client photo_server clean
 
+photo_client: photo_client.o exit_with_error.o
+	$(CC) $(CFLAGS) -o anivarthi_photo_client photo_client.o exit_with_error.o
 
-server: server.o
-	$(CC) server.o -c $(SERVER_NAME)
+photo_server: photo_server.o exit_with_error.o
+	$(CC) $(CFLAGS) -o anivarthi_photo_server photo_server.o exit_with_error.o
 
+photo_client.o: photo_client.c
+	$(CC) $(CFLAGS) -c photo_client.c
 
+photo_server.o: photo_server.c exit_with_error.c
+	$(CC) $(CFLAGS) -c photo_server.c
+
+exit_with_error.o: exit_with_error.c
+	$(CC) $(CFLAGS) -c exit_with_error.c
 
 clean:
-	rm -vf *.o $(CLIENT_NAME) $(SERVER_NAME)
+	rm -v *.o
