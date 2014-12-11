@@ -8,6 +8,9 @@
 
 #define MAXPENDING 5
 #define SERVER_PORT 4167
+#define ACK "Packet received"
+#define DONE_CMD "DONE"
+#define NEXT_CMD "NEXT FILE"
 #define RCVBUFSIZE 256
 #define QUIT_CMD "quit"
 
@@ -16,26 +19,51 @@ void exit_with_error(char *error);
 void handle_client(int client_socket)
 {
 	char echoBuffer[RCVBUFSIZE];
+	char photo_file_name[RCVBUFSIZE];
+	FILE* output;
 	int recvMsgSize;
 
-	if ((recvMsgSize = recv(client_socket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+	while (strcmp(echoBuffer, DONE_CMD) != 0)
 	{
-		exit_with_error("Recv() failed");
-	}
-
-	while (recvMsgSize > 0)
-	{
-		if (send(client_socket, echoBuffer, recvMsgSize, 0) != recvMsgSize)
-		{
-			exit_with_error("Send() failed");
-		}
-
-		if ((recvMsgSize = recv(client_socket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+		if ((recvMsgSize = recv(client_socket, photo_file_name, RCVBUFSIZE, 0)) < 0)
 		{
 			exit_with_error("Recv() failed");
 		}
-	}
 
+		int len = strlen(photo_file_name) - 1;
+		for (int i = len; i > len - 5; i--)
+		{
+			photo_file_name[i] = '\0';
+		}
+		strcat(photo_file_name, "new.jpg");
+
+		if ((output = fopen(photo_file_name, "w")) == NULL)
+		{
+			exit_with_error("File open");
+			exit(1);
+		}	
+
+		while (strcmp(echoBuffer, NEXT_CMD) != 0 && strcmp(echoBuffer, DONE_CMD) != 0)
+		{
+			if (send(client_socket, ACK, strlen(ACK), 0) != strlen(ACK))
+			{
+				exit_with_error("Send() failed");
+			}
+
+			memset(echoBuffer, 0, RCVBUFSIZE);
+			if ((recvMsgSize = recv(client_socket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+			{
+				exit_with_error("Recv() failed");
+			}
+			fprintf(output, "%s", echoBuffer);
+		}
+		fclose(output);
+
+		if (send(client_socket, ACK, strlen(ACK), 0) != strlen(ACK))
+		{
+			exit_with_error("Send() failed");
+		}
+	}
 	close(client_socket);
 }
 

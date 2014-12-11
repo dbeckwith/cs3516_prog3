@@ -15,6 +15,9 @@
 #include <features.h>
 
 #define SERVER_PORT "4167"
+#define ACK "Packet received"
+#define DONE_CMD "DONE"
+#define NEXT_CMD "NEXT FILE"
 #define RCVBUFSIZE 256
 #define QUIT_CMD "quit\n"
 
@@ -66,18 +69,28 @@ int host_to_IP_connection(char* address, char* server_port)
 	return socket_conn;
 }
 
+int validate_ack(char* ack)
+{
+	if (strcmp(ack, ACK) != 0)
+	{
+		exit_with_error("No ack received");
+		return 0;
+	}
+	return 1;
+}
+
 int main(int argc, char** argv)
 {
-	int sock, quit = 0;
+	int sock, quit = 0, photo_count = 0, fdIn = -1;
 	size_t buflen = 0;
-	char* input_string;
-	char output_string[RCVBUFSIZE];
-	unsigned int input_len;
+	char* photo_file_name;
+	char ack_string[RCVBUFSIZE];
+	unsigned int photo_file_name_len;
 	int bytes_rcvd, total_bytes_rcvd;
 
-	if (argc < 2)
+	if (argc < 3)
 	{
-		fprintf(stderr, "Usage: %s <Server IP>\n", argv[0]);
+		fprintf(stderr, "Usage: %s <Server IP> <Photo Count> \n", argv[0]);
 		exit(1);
 	}
 
@@ -86,38 +99,81 @@ int main(int argc, char** argv)
 		exit_with_error(" Connect() failed");
 	}
 
-	while (!quit)
+	photo_count = atoi(argv[2]);
+
+	for (int i = 0; i < photo_count; i++)
 	{
-		printf("--->\n");
-		if ((input_len = getline(&input_string, &buflen, stdin)) < 0)
+		if ((photo_file_name_len = getline(&photo_file_name, &buflen, stdin)) < 0)
 		{
 			exit_with_error("Getline failed\n");
 		}
 
-		if (send(sock, input_string, input_len, 0) != input_len)
+		char* nl = strrchr(photo_file_name, '\n');
+		if (nl)
+		{
+			*nl = '\0';
+			photo_file_name_len--;
+		}
+
+		if ((fdIn = open(photo_file_name, O_RDONLY)) < 0)
+		{
+			exit_with_error("File open");
+			exit(1);
+		}
+
+		int read_size = 0;
+		char photo_read_buffer[RCVBUFSIZE];
+
+		if (send(sock, photo_file_name, photo_file_name_len, 0) != photo_file_name_len)
 		{
 			exit_with_error("send() sent a different number of bytes than expected");
 		}
-		
-		total_bytes_rcvd = 0;
 
-		while (total_bytes_rcvd < input_len)
+		if ((bytes_rcvd = recv(sock, ack_string, RCVBUFSIZE - 1, 0)) <= 0)
 		{
-			if ((bytes_rcvd = recv(sock, output_string, RCVBUFSIZE - 1, 0)) <= 0)
+			exit_with_error("recv() failed or connection closed prematurely");
+		}
+
+		validate_ack(ack_string);
+
+		while ((read_size = read(fdIn, photo_read_buffer, RCVBUFSIZE)) > 0)
+		{
+			if (send(sock, photo_read_buffer, read_size, 0) != read_size)
+			{
+				exit_with_error("send() sent a different number of bytes than expected");
+			}
+
+			if ((bytes_rcvd = recv(sock, ack_string, RCVBUFSIZE - 1, 0)) <= 0)
 			{
 				exit_with_error("recv() failed or connection closed prematurely");
 			}
 
-			total_bytes_rcvd += bytes_rcvd;
-			output_string[bytes_rcvd] = '\0';
-			printf("Output: %s", output_string);
+			ack_string[bytes_rcvd] = '\0';
+			validate_ack(ack_string);
 		}
 
-		if (strcmp(input_string, QUIT_CMD) == 0)
+		if (i == photo_count - 1)
 		{
-			quit = 1;
+			if (send(sock, DONE_CMD, strlen(DONE_CMD), 0) != strlen(DONE_CMD))
+			{
+				exit_with_error("send() sent a different number of bytes than expected");
+			}
 		}
+		else
+		{
+			if (send(sock, NEXT_CMD, strlen(NEXT_CMD), 0) != strlen(NEXT_CMD))
+			{
+				exit_with_error("send() sent a different number of bytes than expected");
+			}
+		}
+		if ((bytes_rcvd = recv(sock, ack_string, RCVBUFSIZE - 1, 0)) <= 0)
+		{
+			exit_with_error("recv() failed or connection closed prematurely");
+		}
+		validate_ack(ack_string);
 	}
+
+	printf("Bye.\n");
 
 	close(sock);
 	exit(0);
