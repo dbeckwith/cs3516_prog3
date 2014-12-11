@@ -13,6 +13,9 @@
 #define NEXT_CMD "NEXT FILE"
 #define RCVBUFSIZE 256
 #define QUIT_CMD "quit"
+#define PHOTO_STR "photo"
+#define NEW_STR "new"
+#define PHOTO_EXT "jpg"
 
 void exit_with_error(char *error);
 
@@ -22,6 +25,7 @@ void handle_client(int client_socket)
 	char photo_file_name[RCVBUFSIZE];
 	FILE* output;
 	int recvMsgSize;
+	int client_id, photo_id;
 
 	while (strcmp(echoBuffer, DONE_CMD) != 0)
 	{
@@ -30,12 +34,15 @@ void handle_client(int client_socket)
 			exit_with_error("Recv() failed");
 		}
 
-		int len = strlen(photo_file_name) - 1;
-		for (int i = len; i > len - 5; i--)
-		{
-			photo_file_name[i] = '\0';
-		}
-		strcat(photo_file_name, "new.jpg");
+		// int len = strlen(photo_file_name) - 1;
+		// for (int i = len; i > len - 5; i--)
+		// {
+		// 	photo_file_name[i] = '\0';
+		// }
+		// strcat(photo_file_name, "new.jpg");
+
+		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
+		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
 		if ((output = fopen(photo_file_name, "w")) == NULL)
 		{
@@ -55,7 +62,8 @@ void handle_client(int client_socket)
 			{
 				exit_with_error("Recv() failed");
 			}
-			fprintf(output, "%s", echoBuffer);
+			//fprintf(output, "%s", echoBuffer);
+			fwrite(echoBuffer, 1, RCVBUFSIZE, output);
 		}
 		fclose(output);
 
@@ -76,8 +84,8 @@ int main(int argc, char *argv[])
 {
 	int serv_socket; // Server socket
 	long client_socket; // Client socket
-	struct sockaddr_in echo_serv_addr; // Local address
-	struct sockaddr_in echo_client_addr; // Client address
+	struct sockaddr_in photo_serv_addr; // Local address
+	struct sockaddr_in photo_client_addr; // Client address
 	unsigned short echo_serv_port; // Port
 	unsigned int client_len; // Length of client address data structure
 	
@@ -94,13 +102,13 @@ int main(int argc, char *argv[])
 		exit_with_error("Socket() failed");
 	}
 	
-	memset(&echo_serv_addr, 0, sizeof(echo_serv_addr)); // Clear struct
-	echo_serv_addr.sin_family = AF_INET; // Internet address family
-	echo_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Any incoming interface
-	echo_serv_addr.sin_port = htons(echo_serv_port); // Set port
+	memset(&photo_serv_addr, 0, sizeof(photo_serv_addr)); // Clear struct
+	photo_serv_addr.sin_family = AF_INET; // Internet address family
+	photo_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Any incoming interface
+	photo_serv_addr.sin_port = htons(echo_serv_port); // Set port
 
 	// Bind local address
-	if (bind (serv_socket, (struct sockaddr *) &echo_serv_addr, sizeof(echo_serv_addr)) < 0)
+	if (bind (serv_socket, (struct sockaddr *) &photo_serv_addr, sizeof(photo_serv_addr)) < 0)
 	{
 		exit_with_error("bind() failed");
 	}
@@ -112,13 +120,13 @@ int main(int argc, char *argv[])
 	}
 	while (1)
 	{
-		client_len = sizeof(echo_client_addr); // Length of client address
+		client_len = sizeof(photo_client_addr); // Length of client address
 
-		if ((client_socket = accept(serv_socket, (struct sockaddr*) &echo_client_addr, &client_len)) < 0) 
+		if ((client_socket = accept(serv_socket, (struct sockaddr*) &photo_client_addr, &client_len)) < 0) 
 		{
 			exit_with_error("accept() failed");
 		}
-		printf("Handling client %s : %d\n", inet_ntoa(echo_client_addr.sin_addr), client_socket);
+		printf("Handling client %s : %d\n", inet_ntoa(photo_client_addr.sin_addr), client_socket);
 		
 		pthread_t tid;
 		if (pthread_create(&tid, NULL, server_thread, (void*)client_socket) != 0)

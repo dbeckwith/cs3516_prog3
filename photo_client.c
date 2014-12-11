@@ -20,6 +20,9 @@
 #define NEXT_CMD "NEXT FILE"
 #define RCVBUFSIZE 256
 #define QUIT_CMD "quit\n"
+#define PHOTO_STR "photo"
+#define NEW_STR "new"
+#define PHOTO_EXT "jpg"
 
 void exit_with_error(char* error);
 
@@ -81,16 +84,16 @@ int validate_ack(char* ack)
 
 int main(int argc, char** argv)
 {
-	int sock, quit = 0, photo_count = 0, fdIn = -1;
+	int sock, quit = 0, photo_count = 0, fdIn = -1, client_id = -1;
 	size_t buflen = 0;
-	char* photo_file_name;
+	char photo_file_name[RCVBUFSIZE];
 	char ack_string[RCVBUFSIZE];
 	unsigned int photo_file_name_len;
 	int bytes_rcvd, total_bytes_rcvd;
 
-	if (argc < 3)
+	if (argc < 4)
 	{
-		fprintf(stderr, "Usage: %s <Server IP> <Photo Count> \n", argv[0]);
+		fprintf(stderr, "Usage: %s <Server IP> <Client ID> <Photo Count> \n", argv[0]);
 		exit(1);
 	}
 
@@ -99,21 +102,25 @@ int main(int argc, char** argv)
 		exit_with_error(" Connect() failed");
 	}
 
-	photo_count = atoi(argv[2]);
+	photo_count = atoi(argv[3]);
+	client_id = atoi(argv[2]);
 
 	for (int i = 0; i < photo_count; i++)
 	{
-		if ((photo_file_name_len = getline(&photo_file_name, &buflen, stdin)) < 0)
-		{
-			exit_with_error("Getline failed\n");
-		}
+		// if ((photo_file_name_len = getline(&photo_file_name, &buflen, stdin)) < 0)
+		// {
+		// 	exit_with_error("Getline failed\n");
+		// }
 
-		char* nl = strrchr(photo_file_name, '\n');
-		if (nl)
-		{
-			*nl = '\0';
-			photo_file_name_len--;
-		}
+		// char* nl = strrchr(photo_file_name, '\n'); ///TODO genreate photo file name
+		// if (nl)
+		// {
+		// 	*nl = '\0';
+		// 	photo_file_name_len--;
+		// }
+
+		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + i, PHOTO_EXT);
+		printf("%s\n", photo_file_name);
 
 		if ((fdIn = open(photo_file_name, O_RDONLY)) < 0)
 		{
