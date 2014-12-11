@@ -1,23 +1,18 @@
-#include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <pthread.h>
+#include "photo.h"
+#include "util.h"
+#include "network_layer.h"
+#include "data_link_layer.h"
+#include "physical_layer.h"
 
 #define MAXPENDING 5
-#define SERVER_PORT 4167
-#define ACK "Packet received"
-#define DONE_CMD "DONE"
-#define NEXT_CMD "NEXT FILE"
-#define RCVBUFSIZE 256
-#define QUIT_CMD "quit"
-#define PHOTO_STR "photo"
-#define NEW_STR "new"
-#define PHOTO_EXT "jpg"
-
-void exit_with_error(char *error);
 
 void handle_client(int client_socket)
 {
@@ -44,7 +39,7 @@ void handle_client(int client_socket)
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
 		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
-		if ((output = fopen(photo_file_name, "w")) == NULL)
+		if ((output = fopen(photo_file_name, "wb")) == NULL)
 		{
 			exit_with_error("File open");
 			exit(1);

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "util.h"
 
 /*
  * @brief Creates error and includes given message as output.
@@ -7,6 +8,6 @@
  */
 void exit_with_error(char* error)
 {
-	perror(error);
-	exit(1);
+    perror(error);
+    exit(1);
 }

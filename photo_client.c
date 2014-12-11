@@ -1,75 +1,63 @@
-#define _GNU_SOURCE
-
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <string.h>
-#include <errno.h>
-#include <features.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include "photo.h"
+#include "util.h"
+#include "network_layer.h"
+#include "data_link_layer.h"
+#include "physical_layer.h"
 
-#define SERVER_PORT "4167"
-#define ACK "Packet received"
-#define DONE_CMD "DONE"
-#define NEXT_CMD "NEXT FILE"
-#define RCVBUFSIZE 256
-#define QUIT_CMD "quit\n"
-#define PHOTO_STR "photo"
-#define NEW_STR "new"
-#define PHOTO_EXT "jpg"
+int connect_dns(char *serverName, unsigned short serverPort) {
+    int serverSocket;
+    struct addrinfo serverAddrHints; // hints for finding server with DNS
+    struct addrinfo *serverAddrInfo; // server address info
+    struct sockaddr *serverAddr; // server address
+    char serviceName[6]; // string version of "service" which is just the server port
 
-void exit_with_error(char* error);
+    printf("Connecting to server at %s:%d\n", serverName, serverPort);
 
-/*
- * @brief Converts hostname and port number to IP address and connects socket
- * @param address The hostname to connect to
- * @param server_port The port to connect to
- * @return socket_conn The socket descriptor that has been connected
- */
-int host_to_IP_connection(char* address, char* server_port)
-{
-	int socket_conn, addr_result;
-	struct addrinfo hints;
-	struct addrinfo *result, *rp;
+    sprintf(serviceName, "%d", serverPort); // convert port to string for service field
 
-	memset(&hints, 0, sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC; // Allow IPv4 or IPv6
-	hints.ai_socktype = SOCK_STREAM; // Datagram socket
-	hints.ai_flags = 0;
-	hints.ai_protocol = 0; // Any protocol
+    memset(&serverAddrHints, 0, sizeof(struct addrinfo));
+    serverAddrHints.ai_family = AF_INET;    // allow internet address family
+    serverAddrHints.ai_socktype = SOCK_STREAM; // allow TCP type sockets
 
-	addr_result = getaddrinfo(address, server_port, &hints, &result); // Get address from hostname
+    // do a DNS lookup with the server name, the port number ("service"), and address hints
+    if (getaddrinfo(serverName, serviceName, &serverAddrHints, &serverAddrInfo) != 0)
+        exit_with_error("getaddrinfo() failed");
 
-	if (addr_result != 0)
-	{
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(addr_result));
-		exit(EXIT_FAILURE);
-	}
+    // serverAddrInfo is a linked list of possible addresses, go through each and try to connect
+    for (; serverAddrInfo != NULL; serverAddrInfo = serverAddrInfo->ai_next) {
+        // create a new socket from the info
+        if ((serverSocket = socket(serverAddrInfo->ai_family, serverAddrInfo->ai_socktype, serverAddrInfo->ai_protocol)) < 0) {
+            continue;
+        }
 
-	// Search through list of results for socket connection that works correctly
-	for (rp = result; rp != NULL; rp = rp->ai_next)
-	{
-		socket_conn = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-		if (socket_conn == -1)
-		{
-			continue; // Don't try the connection since socket failed
-		}
+        // get address
+        serverAddr = serverAddrInfo->ai_addr;
 
-		if (connect(socket_conn, rp->ai_addr, rp->ai_addrlen) != -1)
-		{
-			break;
-		}
-		close(socket_conn);
-	}
+        // try to connect
+        if (connect(serverSocket, serverAddr, sizeof(*serverAddr)) < 0) {
+            // didn't connect, close the socket and keep going
+            close(serverSocket);
+            continue;
+        }
+        // connected, break the loop
+        break;
+    }
 
-	freeaddrinfo(result); // Free memory of iterator variable
-	return socket_conn;
+    // if got through the whole list and never connected, print an error
+    if (serverAddrInfo == NULL) {
+        return -1;
+    }
+
+    printf("Connected to server at %s\n", inet_ntoa(((struct sockaddr_in *)serverAddr)->sin_addr));
+
+    return serverSocket;
 }
 
 int validate_ack(char* ack)
@@ -84,7 +72,8 @@ int validate_ack(char* ack)
 
 int main(int argc, char** argv)
 {
-	int sock, quit = 0, photo_count = 0, fdIn = -1, client_id = -1;
+	int sock, quit = 0, photo_count = 0, client_id = -1, photo_num = 0;
+	FILE* fdIn;
 	size_t buflen = 0;
 	char photo_file_name[RCVBUFSIZE];
 	char ack_string[RCVBUFSIZE];
@@ -97,7 +86,8 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	if ((sock = host_to_IP_connection(argv[1], SERVER_PORT)) < 0)
+	if ((sock = connect_dns
+	(argv[1], SERVER_PORT)) < 0)
 	{
 		exit_with_error(" Connect() failed");
 	}
@@ -105,24 +95,12 @@ int main(int argc, char** argv)
 	photo_count = atoi(argv[3]);
 	client_id = atoi(argv[2]);
 
-	for (int i = 0; i < photo_count; i++)
+	for (photo_num = 0; photo_num < photo_count; photo_num++)
 	{
-		// if ((photo_file_name_len = getline(&photo_file_name, &buflen, stdin)) < 0)
-		// {
-		// 	exit_with_error("Getline failed\n");
-		// }
-
-		// char* nl = strrchr(photo_file_name, '\n'); ///TODO genreate photo file name
-		// if (nl)
-		// {
-		// 	*nl = '\0';
-		// 	photo_file_name_len--;
-		// }
-
-		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + i, PHOTO_EXT);
+		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
 		printf("%s\n", photo_file_name);
 
-		if ((fdIn = open(photo_file_name, O_RDONLY)) < 0)
+		if ((fdIn = fopen(photo_file_name, "rb")) < 0)
 		{
 			exit_with_error("File open");
 			exit(1);
@@ -143,7 +121,7 @@ int main(int argc, char** argv)
 
 		validate_ack(ack_string);
 
-		while ((read_size = read(fdIn, photo_read_buffer, RCVBUFSIZE)) > 0)
+		while ((read_size = fread(photo_read_buffer, 1, RCVBUFSIZE, fdIn)) > 0)
 		{
 			if (send(sock, photo_read_buffer, read_size, 0) != read_size)
 			{
@@ -159,7 +137,7 @@ int main(int argc, char** argv)
 			validate_ack(ack_string);
 		}
 
-		if (i == photo_count - 1)
+		if (photo_num == photo_count - 1)
 		{
 			if (send(sock, DONE_CMD, strlen(DONE_CMD), 0) != strlen(DONE_CMD))
 			{
