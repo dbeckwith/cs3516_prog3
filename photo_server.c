@@ -9,8 +9,6 @@
 #include "photo.h"
 #include "util.h"
 #include "network_layer.h"
-#include "data_link_layer.h"
-#include "physical_layer.h"
 
 #define MAXPENDING 5
 
@@ -79,45 +77,23 @@ int main(int argc, char *argv[])
 {
 	int serv_socket; // Server socket
 	long client_socket; // Client socket
-	struct sockaddr_in photo_serv_addr; // Local address
 	struct sockaddr_in photo_client_addr; // Client address
-	unsigned short echo_serv_port; // Port
-	unsigned int client_len; // Length of client address data structure
+	unsigned int client_addr_len; // Length of client address data structure
 	
 	if (argc != 1)
 	{ 
 		fprintf(stderr, "Usage: %s\n", argv[0]);
 		exit(1); 
 	}
-	echo_serv_port = SERVER_PORT;
-	
-	// Try socket for connection
-	if ((serv_socket = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) 
-	{
-		exit_with_error("Socket() failed");
-	}
-	
-	memset(&photo_serv_addr, 0, sizeof(photo_serv_addr)); // Clear struct
-	photo_serv_addr.sin_family = AF_INET; // Internet address family
-	photo_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Any incoming interface
-	photo_serv_addr.sin_port = htons(echo_serv_port); // Set port
 
-	// Bind local address
-	if (bind (serv_socket, (struct sockaddr *) &photo_serv_addr, sizeof(photo_serv_addr)) < 0)
-	{
-		exit_with_error("bind() failed");
-	}
-	
-	// Listen on given port for clients
-	if (listen (serv_socket, MAXPENDING) < 0)
-	{
+	if ((serv_socket = network_listen(SERVER_PORT, MAXPENDING)) < 0) {
 		exit_with_error("listen() failed");
 	}
-	while (1)
+	while (true)
 	{
-		client_len = sizeof(photo_client_addr); // Length of client address
+		client_addr_len = sizeof(photo_client_addr); // Length of client address
 
-		if ((client_socket = accept(serv_socket, (struct sockaddr*) &photo_client_addr, &client_len)) < 0) 
+		if ((client_socket = network_accept(serv_socket, (struct sockaddr*) &photo_client_addr, &client_addr_len)) < 0) 
 		{
 			exit_with_error("accept() failed");
 		}
