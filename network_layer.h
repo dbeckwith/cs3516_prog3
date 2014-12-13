@@ -8,6 +8,7 @@
 typedef union {
     struct packet {
     	char data[PKT_DATA_SIZE];
+    	char data_length;
     	char eof;
     } packet;
     char buff[sizeof(struct packet)];
