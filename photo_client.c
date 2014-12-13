@@ -37,11 +37,6 @@ int main(int argc, char** argv)
 		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
 		printf("%s\n", photo_file_name);
 
-		if ((photo_file = fopen(photo_file_name, "rb")) < 0)
-		{
-			exit_with_error("File open");
-			exit(1);
-		}
         // send photo name
 		if (network_send(sock, photo_file_name, photo_file_name_len) != photo_file_name_len)
 		{

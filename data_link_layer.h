@@ -4,12 +4,14 @@
 
 enum frame_types {DATA, ACK};
 
-typedef struct frame
-{
-	char frame_type;
-	char[2] seq_num;
-	char eof;
-	char[2] error_detect;
+typedef union {
+    struct frame {
+    	char frame_type;
+    	char seq_num[2];
+    	char eof;
+    	char error_detect[2];
+    } frame;
+    char buff[sizeof(struct frame)];
 } frame_t;
 
 int data_link_send(int socket, char* buffer, int buffer_size);

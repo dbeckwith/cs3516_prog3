@@ -5,11 +5,15 @@
 
 #define PKT_DATA_SIZE 200
 
-typedef struct packet
-{
-	char[PKT_DATA_SIZE] data;
-	bool eof;
+typedef union {
+    struct packet {
+    	char data[PKT_DATA_SIZE];
+    	char eof;
+    } packet;
+    char buff[sizeof(struct packet)];
 } packet_t;
+
+int network_send_file(int socket, char* file_name);
 
 int network_send(int sockfd, char* buffer, unsigned int len);
 int network_recv(int sockfd, char* buffer, unsigned int len);
