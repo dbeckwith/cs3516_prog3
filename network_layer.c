@@ -74,7 +74,7 @@ int network_send(int sockfd, char* buffer, unsigned int len)
 			chunk_len = len - pos;
 		}
 		memcpy(packet.packet.data, buffer + pos, chunk_len);
-		if (network_send_packet(socket, &packet) < 0){
+		if (network_send_packet(sockfd, &packet) < 0){
 			return -1;
 		}
 	}
@@ -88,7 +88,7 @@ int network_recv(int sockfd, char* buffer, unsigned int len)
 
 int network_connect(char* url, unsigned short port)
 {
-	return connect_dns(url, port);
+	return physical_connect(url, port);
 }
 
 int network_listen(unsigned short port, unsigned int max_pending_clients)

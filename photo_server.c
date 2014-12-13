@@ -11,6 +11,8 @@
 #include "network_layer.h"
 
 #define MAXPENDING 5
+#define RCVBUFSIZE 256
+#define ACK "ack"
 
 void handle_client(int client_socket)
 {
