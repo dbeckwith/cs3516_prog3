@@ -9,7 +9,7 @@
 #include "util.h"
 #include "network_layer.h"
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
 	int sock;
     int photo_count;

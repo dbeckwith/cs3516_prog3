@@ -6,11 +6,11 @@ CFLAGS=
 
 all: photo_client photo_server clean
 
-photo_client: photo_client.o util.o
-	$(CC) $(CFLAGS) -o team_3_photo_client photo_client.o util.o
+photo_client: photo_client.o util.o network_layer.o data_link_layer.o physical_layer.o
+	$(CC) $(CFLAGS) -o team_3_photo_client photo_client.o util.o network_layer.o data_link_layer.o physical_layer.o
 
-photo_server: photo_server.o util.o
-	$(CC) $(CFLAGS) -lpthread -o team_3_photo_server photo_server.o util.o
+photo_server: photo_server.o util.o network_layer.o data_link_layer.o physical_layer.o
+	$(CC) $(CFLAGS) -lpthread -o team_3_photo_server photo_server.o util.o network_layer.o data_link_layer.o physical_layer.o
 
 photo_client.o: photo_client.c photo.h util.h
 	$(CC) $(CFLAGS) -c photo_client.c

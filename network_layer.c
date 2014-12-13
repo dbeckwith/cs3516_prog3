@@ -8,9 +8,9 @@
 #include "data_link_layer.h"
 #include "physical_layer.h"
 
-int network_send_packet(int socket, pakcet_t* packet)
+int network_send_packet(int socket, packet_t* packet)
 {
-	
+	return 0;
 }
 
 int network_send_file(int socket, char* file_name)
@@ -28,9 +28,9 @@ int network_send_file(int socket, char* file_name)
 	FILE* photo;
 	packet_t packet;
 
-	curr_read_buffer = &read_buffer1;
+	curr_read_buffer = read_buffer1;
 	curr_read_size = &read_size1;
-	prev_read_buffer = &read_buffer2;
+	prev_read_buffer = read_buffer2;
 	prev_read_size = &read_size2;
 	read_size2 = -1;
 
