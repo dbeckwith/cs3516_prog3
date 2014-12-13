@@ -18,6 +18,15 @@ photo_client.o: photo_client.c photo.h util.h
 photo_server.o: photo_server.c photo.h util.h
 	$(CC) $(CFLAGS) -c photo_server.c
 
+network_layer.o: network_layer.c network_layer.h
+	$(CC) $(CFLAGS) -c network_layer.c
+
+data_link_layer.o: data_link_layer.c data_link_layer.h
+	$(CC) $(CFLAGS) -c data_link_layer.c
+
+physical_layer.o: physical_layer.c physical_layer.h
+	$(CC) $(CFLAGS) -c physical_layer.c
+
 util.o: util.c util.h
 	$(CC) $(CFLAGS) -c util.c
 
