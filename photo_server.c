@@ -81,11 +81,13 @@ void handle_client(int client_socket)
 	command = -1;
 	while (command != DONE_CMD)
 	{
+		printf("receiving name length\n");
 		if (recv_message(client_socket, recv_buff, 4) != 4) {
 			exit_with_error("Recv() failed");
 		}
 		memcpy(&photo_file_len, recv_buff, 4);
 
+		printf("receiving name\n");
 		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len) {
 			exit_with_error("Recv() failed");
 		}
@@ -96,9 +98,13 @@ void handle_client(int client_socket)
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
 		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
+		printf("receiving file\n");
 		// While not DONE or NEXT FILE, keep receving photo packets
-		network_recv_file(client_socket, photo_file_name);
+		if (network_recv_file(client_socket, photo_file_name) < 0) {
+			exit_with_error("Recv() failed");
+		}
 
+		printf("receiving command\n");
 		if (recv_message(client_socket, recv_buff, 1) != 1) {
 			exit_with_error("Recv() failed");
 		}
@@ -112,10 +118,13 @@ Receives exactly len bytes from the client.
 */
 int recv_message(int socket, char* buffer, unsigned int len) {
 	unsigned int pos;
-	unsigned int chunk_len;
+	int chunk_len;
 
 	for (pos = 0; pos < len; pos += chunk_len) {
-		if ((chunk_len = network_recv(socket, buffer + pos, len - pos)) <= 0) {
+		printf("recv_message: calling network_recv\n");
+		chunk_len = network_recv(socket, buffer + pos, len - pos);
+		if (chunk_len <= 0) {
+			printf("recv_message: pos = %d, chunk_len was %d\n", pos, chunk_len);
 			return pos;
 		}
 	}

@@ -1,4 +1,12 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include "util.h"
 #include "data_link_layer.h"
+#include "physical_layer.h"
 
 int data_link_send_frame(int socket, frame_t* frame);
 int data_link_recv_frame(int socket, frame_t* frame);
@@ -10,11 +18,14 @@ int data_link_send_frame(int socket, frame_t* frame)
 	frame_t ack_frame;	
 	int bytes_sent;
 
+    frame->frame.ack = false;
+
 	if ((bytes_sent = physical_send(socket, frame->buff, sizeof(frame->buff))) != sizeof(frame->buff))
 	{
 		return bytes_sent;
 	}
 
+    printf("receiving frame ack\n");
 	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.buff))
 	{
 		return -1;
@@ -74,12 +85,20 @@ int data_link_recv_frame(int socket, frame_t* frame)
 		total_received += bytes_received;
 	}
 
+    printf("sending frame ack\n");
 	if (!frame->frame.ack) {
 		ack_frame.frame.ack = true;
-		if (data_link_send(socket, ack_frame.buff, sizeof(ack_frame.buff)) != sizeof(ack_frame.buff)) {
+		if (physical_send(socket, ack_frame.buff, sizeof(ack_frame.buff)) != sizeof(ack_frame.buff)) {
 			return -1;
 		}
 	}
+
+    printf("frame contents: len = %d\n", frame->frame.data_length);
+    int i;
+    for (i = 0; i < frame->frame.data_length; i++) {
+        printf("%x ", frame->frame.data[i]);
+    }
+    printf("\n");
 
 	return total_received;
 }

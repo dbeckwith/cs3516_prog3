@@ -30,6 +30,7 @@ int network_send_packet(int socket, packet_t* packet)
 		return bytes_sent;
 	}
 
+	printf("receiving packet ack\n");
 	// Check if packet is ACKed successfully
 	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.buff))
 	{
@@ -91,6 +92,7 @@ int network_send_file(int socket, char* file_name)
 			packet.packet.eof = *curr_read_size == 0;
 			memcpy(packet.packet.data, prev_read_buffer, *prev_read_size);
 			packet.packet.data_length = *prev_read_size;
+			packet.packet.ack = false;
 
 			if (network_send_packet(socket, &packet) != sizeof(packet))
 			{
@@ -140,6 +142,8 @@ int network_send(int socket, char* buffer, unsigned int len)
 		}
 		memcpy(packet.packet.data, buffer + pos, chunk_len);
 		packet.packet.data_length = chunk_len;
+		packet.packet.eof = false;
+		packet.packet.ack = false;
 		
 		if (network_send_packet(socket, &packet) != sizeof(packet_t))
 		{
@@ -166,8 +170,11 @@ int network_recv_packet(int socket, packet_t* packet)
 		total_received += bytes_received;
 	}
 
+	printf("sending packet ack\n");
 	if (!packet->packet.ack) {
 		ack_packet.packet.ack = true;
+		ack_packet.packet.eof = false;
+		ack_packet.packet.data_length = 0;
 		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
 			return -1;
 		}

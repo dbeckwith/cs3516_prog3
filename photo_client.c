@@ -17,8 +17,8 @@ int main(int argc, char* argv[])
     int photo_count;
     int photo_num;
     int client_id;
-    char* send_buff[SENDBUFLEN];
-	char* photo_file_name;
+    char send_buff[SENDBUFLEN];
+	char photo_file_name[1000];
 	unsigned int photo_file_name_len;
 
 	// Bad arguments
@@ -41,6 +41,14 @@ int main(int argc, char* argv[])
 		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
 		printf("%s\n", photo_file_name);
 
+		printf("sending photo length %d\n", photo_file_name_len);
+		memcpy(send_buff, &photo_file_name_len, 4);
+		if (network_send(sock, send_buff, 4) != 4)
+		{
+			exit_with_error("send() sent a different number of bytes than expected");
+		}
+
+		printf("sending photo name\n");
         // Send photo name
 		if (network_send(sock, photo_file_name, photo_file_name_len) != photo_file_name_len)
 		{
