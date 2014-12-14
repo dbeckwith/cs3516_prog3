@@ -12,7 +12,6 @@
 
 #define MAXPENDING 5 //   Max number of clients in queue
 #define RCVBUFSIZE 256 // TODO: Remove this
-#define ACK "ack" //      TODO: Remove this
 
 int recv_message(int socket, char* buffer, unsigned int len);
 void handle_client(int client_socket);
@@ -96,12 +95,6 @@ void handle_client(int client_socket)
 		// Format the name to the new file name
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
 		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
-
-		if ((output = fopen(photo_file_name, "wb")) == NULL)
-		{
-			exit_with_error("File open");
-			exit(1);
-		}
 
 		// While not DONE or NEXT FILE, keep receving photo packets
 		network_recv_file(client_socket, photo_file_name);

@@ -9,12 +9,15 @@
 #include "util.h"
 #include "network_layer.h"
 
+#define SENDBUFLEN 256
+
 int main(int argc, char* argv[])
 {
 	int sock;
     int photo_count;
     int photo_num;
     int client_id;
+    char* send_buff[SENDBUFLEN];
 	char* photo_file_name;
 	unsigned int photo_file_name_len;
 
@@ -52,18 +55,16 @@ int main(int argc, char* argv[])
 		if (photo_num == photo_count - 1)
 		{
             // Just sent last photo, tell server we're done
-			if (network_send(sock, DONE_CMD, DONE_CMD_LEN) != DONE_CMD_LEN)
-			{
-				exit_with_error("send() sent a different number of bytes than expected");
-			}
+            send_buff[0] = DONE_CMD;
 		}
 		else
 		{
             // Tell server to wait for another photo
-			if (network_send(sock, NEXT_CMD, NEXT_CMD_LEN) != NEXT_CMD_LEN)
-			{
-				exit_with_error("send() sent a different number of bytes than expected");
-			}
+            send_buff[0] = NEXT_CMD;
+		}
+		if (network_send(sock, send_buff, 1) != 1)
+		{
+			exit_with_error("send() sent a different number of bytes than expected");
 		}
 	}
 
