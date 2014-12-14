@@ -17,10 +17,10 @@
 int network_send_packet(int socket, packet_t* packet)
 {
 	packet_t ack_packet;
-	unsigned int bytes_sent;
+	int bytes_sent;
 
 	// Check if packet is sent successfully
-	if ((bytes_sent = data_link_send(socket, packet->buff, sizeof(packet->buff)) < 0) != sizeof(packet->buff))
+	if ((bytes_sent = data_link_send(socket, packet->buff, sizeof(packet->buff))) != sizeof(packet->buff))
 	{
 		return bytes_sent;
 	}
@@ -58,7 +58,7 @@ int network_send_file(int socket, char* file_name)
 	char* temp_read_buffer;
 	unsigned int* temp_read_size;
 	FILE* photo;
-	unsigned int bytes_sent;
+	int bytes_sent;
 	packet_t packet;
 
 	curr_read_buffer = read_buffer1;
@@ -120,7 +120,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 	packet_t packet;
 	unsigned int pos;
 	unsigned int chunk_len;
-	unsigned int bytes_sent;
+	int bytes_sent;
 
 	chunk_len = PKT_DATA_SIZE;
 	for (pos = 0; pos < len; pos += PKT_DATA_SIZE)
@@ -135,7 +135,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 		memcpy(packet.packet.data, buffer + pos, chunk_len);
 		packet.packet.data_length = chunk_len;
 		
-		if (network_send_packet(socket, &packet) != sizeof(packet))
+		if (network_send_packet(socket, &packet) != sizeof(packet_t))
 		{
 			return -1;
 		}
@@ -146,28 +146,62 @@ int network_send(int socket, char* buffer, unsigned int len)
 
 int network_recv_packet(int socket, packet_t* packet)
 {
-	frame_t frame_1;
-	frame_t frame_2;
-	frame_1.frame.data_length = 0;
-	frame_2.frame.data_length = 0;
+	packet_t ack_packet;
+	int bytes_received;
 
-	if (data_link_recv(socket, &frame_1) == sizeof(frame_t))
-	{
-		memcpy(packet->buff, frame_1.frame.data, frame_1.frame.data_length);
-		if (data_link_recv(socket, &frame_2) == sizeof(frame_t))
-		{
-			if (frame_1.frame.data_length + frame_2.data.data_length == sizeof(packet_t))
-			{
-				memcpy(packet->buff + frame_1.frame.data_length, frame_2.frame.data, frame_2.frame.data_length);
-
-				packet_t ack_packet;
-				ack_packet.packet.ack = true;
-				data_link_send(socket, ack_packet.buff, sizeof(ack_packet));
-			}
-		}
-		return frame_1.frame.data_length + frame_2.frame.data_length;
+	if ((bytes_received = data_link_recv(socket, packet->buff, sizeof(packet->buff))) != sizeof(packet->buff)) {
+		return bytes_received;
 	}
-	return frame_1.frame.data_length;
+
+	ack_packet.packet.ack = true;
+	if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
+		return -1;
+	}
+
+	return bytes_received;
+}
+
+int network_recv_file(int socket, char* file_name) {
+	packet_t packet;
+	FILE* output;
+	int bytes_received;
+
+	if ((output = fopen(file_name, "wb")) == NULL) {
+		return -1;
+	}
+
+	packet.packet.eof = false;
+	while (!packet.packet.eof) {
+		if (network_recv_packet(socket, &packet) != sizeof(packet)) {
+			return -1;
+		}
+		bytes_received += packet.packet.data_length;
+		if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length) {
+			return bytes_received;
+		}
+	}
+	return bytes_received;
+}
+
+int network_recv(int socket, char* buffer, unsigned int len) {
+	packet_t packet;
+	unsigned int pos;
+	unsigned int chunk_len;
+	unsigned int bytes_received;
+
+	for (pos = 0; pos < len; pos += chunk_len) {
+		if (network_recv_packet(socket, &packet) != sizeof(packet_t)) {
+			return -1;
+		}
+		chunk_len = packet.packet.data_length;
+		memcpy(buffer + pos, packet.packet.data, chunk_len);
+		bytes_received += chunk_len;
+		if (packet.packet.eof) {
+			return bytes_received;
+		}
+	}
+	return bytes_received;
+}
 
 /*
  * @brief Call physical layer connect on given url and port

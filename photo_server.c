@@ -22,17 +22,22 @@
 void handle_client(int client_socket)
 {
 	char input_buffer[RCVBUFSIZE]; //        Buffer for client data
-	char photo_file_name[RCVBUFSIZE]; //     Buffer for output photo file name
+	char* photo_file_name; //  Buffer for output photo file name
 	FILE* output; //                         Output file
-	int recvMsgSize, client_id, photo_id;
+	packet_t packet;
+	int client_id;
+	int photo_id;
+	int recvMsgSize;
 
 	while (strcmp(input_buffer, DONE_CMD) != 0)
 	{
 		// Get the file name that will be the new photo
-		if ((recvMsgSize = recv(client_socket, photo_file_name, RCVBUFSIZE, 0)) < 0)
+		if (network_recv_packet(client_socket, &packet) < 0)
 		{
 			exit_with_error("Recv() failed");
 		}
+
+		photo_file_name = packet.packet.data;
 
 		// Format the name to the new file name
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
@@ -42,18 +47,12 @@ void handle_client(int client_socket)
 		{
 			exit_with_error("File open");
 			exit(1);
-		}	
+		}
 
 		// While not DONE or NEXT FILE, keep receving photo packets
 		while (strcmp(input_buffer, NEXT_CMD) != 0 && strcmp(input_buffer, DONE_CMD) != 0)
 		{
-			if (send(client_socket, ACK, strlen(ACK), 0) != strlen(ACK))
-			{
-				exit_with_error("Send() failed");
-			}
-
-			memset(input_buffer, 0, RCVBUFSIZE);
-			if ((recvMsgSize = recv(client_socket, input_buffer, RCVBUFSIZE, 0)) < 0)
+			if (network_recv_packet(client_socket, &packet) < 0)
 			{
 				exit_with_error("Recv() failed");
 			}

@@ -23,7 +23,8 @@ typedef union
 
 int network_send_file(int socket, char* file_name);
 int network_send(int socket, char* buffer, unsigned int len);
-int network_recv_packet(int socket, packet_t* packet);
+int network_recv_file(int socket, char* file_name);
+int network_recv(int socket, char* buffer, unsigned int len);
 int network_connect(char* url, unsigned short port);
 int network_listen(unsigned short port, unsigned int max_pending_clients);
 int network_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len);
