@@ -14,59 +14,8 @@
 #define RCVBUFSIZE 256 // TODO: Remove this
 #define ACK "ack" //      TODO: Remove this
 
-
-/*
- * @brief Handles client given a socket. Receives photo name and calls protocols in lower levels to handle receiving packets from client.
- * @param client_socket The socket to receive the photo(s) from
- */
-void handle_client(int client_socket)
-{
-	char input_buffer[RCVBUFSIZE]; //        Buffer for client data
-	char* photo_file_name; //  Buffer for output photo file name
-	FILE* output; //                         Output file
-	packet_t packet;
-	int client_id;
-	int photo_id;
-	int recvMsgSize;
-
-	while (strcmp(input_buffer, DONE_CMD) != 0)
-	{
-		// Get the file name that will be the new photo
-		if (network_recv_packet(client_socket, &packet) < 0)
-		{
-			exit_with_error("Recv() failed");
-		}
-
-		photo_file_name = packet.packet.data;
-
-		// Format the name to the new file name
-		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
-		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
-
-		if ((output = fopen(photo_file_name, "wb")) == NULL)
-		{
-			exit_with_error("File open");
-			exit(1);
-		}
-
-		// While not DONE or NEXT FILE, keep receving photo packets
-		while (strcmp(input_buffer, NEXT_CMD) != 0 && strcmp(input_buffer, DONE_CMD) != 0)
-		{
-			if (network_recv_packet(client_socket, &packet) < 0)
-			{
-				exit_with_error("Recv() failed");
-			}
-			fwrite(input_buffer, 1, RCVBUFSIZE, output);
-		}
-		fclose(output);
-
-		if (send(client_socket, ACK, strlen(ACK), 0) != strlen(ACK))
-		{
-			exit_with_error("Send() failed");
-		}
-	}
-	close(client_socket);
-}
+int recv_message(int socket, char* buffer, unsigned int len);
+void handle_client(int client_socket);
 
 /*
  * @brief Function for thread to run when a new client is accepted. Handles client by receiving packets of photos
@@ -114,4 +63,68 @@ int main(int argc, char *argv[])
 		}
 		pthread_detach(tid); // TODO: Do we still want this?
 	}
+}
+
+
+/*
+ * @brief Handles client given a socket. Receives photo name and calls protocols in lower levels to handle receiving packets from client.
+ * @param client_socket The socket to receive the photo(s) from
+ */
+void handle_client(int client_socket)
+{
+	char recv_buff[RCVBUFSIZE];
+	unsigned int photo_file_len;
+	char* photo_file_name; //  Buffer for output photo file name
+	int command;
+	int client_id;
+	int photo_id;
+
+	command = -1;
+	while (command != DONE_CMD)
+	{
+		if (recv_message(client_socket, recv_buff, 4) != 4) {
+			exit_with_error("Recv() failed");
+		}
+		memcpy(&photo_file_len, recv_buff, 4);
+
+		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len) {
+			exit_with_error("Recv() failed");
+		}
+		photo_file_name = (char*)malloc(photo_file_len);
+		memcpy(photo_file_name, recv_buff, photo_file_len);
+
+		// Format the name to the new file name
+		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
+		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
+
+		if ((output = fopen(photo_file_name, "wb")) == NULL)
+		{
+			exit_with_error("File open");
+			exit(1);
+		}
+
+		// While not DONE or NEXT FILE, keep receving photo packets
+		network_recv_file(client_socket, photo_file_name);
+
+		if (recv_message(client_socket, recv_buff, 1) != 1) {
+			exit_with_error("Recv() failed");
+		}
+		command = recv_buff[0];
+	}
+	close(client_socket);
+}
+
+/*
+Receives exactly len bytes from the client.
+*/
+int recv_message(int socket, char* buffer, unsigned int len) {
+	unsigned int pos;
+	unsigned int chunk_len;
+
+	for (pos = 0; pos < len; pos += chunk_len) {
+		if ((chunk_len = network_recv(socket, buffer + pos, len - pos)) <= 0) {
+			return pos;
+		}
+	}
+	return pos;
 }
