@@ -26,7 +26,7 @@ int network_send_packet(int socket, packet_t* packet)
 	}
 
 	// Check if packet is ACKed successfully
-	if (data_link_recv(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff))
+	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.buff))
 	{
 		return -1;
 	}
@@ -125,10 +125,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 	chunk_len = PKT_DATA_SIZE;
 	for (pos = 0; pos < len; pos += PKT_DATA_SIZE)
 	{
-		packet.packet.eof = pos + PKT_DATA_SIZE >= len;
-		packet.packet.ack = false;
-
-		if (packet.packet.eof)
+		if (pos + PKT_DATA_SIZE >= len)
 		{
 			chunk_len = len - pos;
 		}
@@ -148,17 +145,24 @@ int network_recv_packet(int socket, packet_t* packet)
 {
 	packet_t ack_packet;
 	int bytes_received;
+	int total_received;
 
-	if ((bytes_received = data_link_recv(socket, packet->buff, sizeof(packet->buff))) != sizeof(packet->buff)) {
-		return bytes_received;
+	total_received = 0;
+	while (total_received < sizeof(packet->buff)) {
+		if ((bytes_received = data_link_recv(socket, packet->buff + total_received, sizeof(packet->buff) - total_received)) <= 0) {
+			return -1;
+		}
+		total_received += bytes_received;
 	}
 
-	ack_packet.packet.ack = true;
-	if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
-		return -1;
+	if (!packet->packet.ack) {
+		ack_packet.packet.ack = true;
+		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
+			return -1;
+		}
 	}
 
-	return bytes_received;
+	return total_received;
 }
 
 int network_recv_file(int socket, char* file_name) {
@@ -185,21 +189,12 @@ int network_recv_file(int socket, char* file_name) {
 
 int network_recv(int socket, char* buffer, unsigned int len) {
 	packet_t packet;
-	unsigned int pos;
-	unsigned int chunk_len;
-	unsigned int bytes_received;
+	int bytes_received;
 
-	for (pos = 0; pos < len; pos += chunk_len) {
-		if (network_recv_packet(socket, &packet) != sizeof(packet_t)) {
-			return -1;
-		}
-		chunk_len = packet.packet.data_length;
-		memcpy(buffer + pos, packet.packet.data, chunk_len);
-		bytes_received += chunk_len;
-		if (packet.packet.eof) {
-			return bytes_received;
-		}
+	if (network_recv_packet(socket, &packet) != sizeof(packet_t)) {
+		return -1;
 	}
+	memcpy(buffer, packet.packet.data, bytes_received = packet.packet.data_length);
 	return bytes_received;
 }
 
