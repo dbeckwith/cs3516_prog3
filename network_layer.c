@@ -8,6 +8,9 @@
 #include "data_link_layer.h"
 #include "physical_layer.h"
 
+int network_send_packet(int socket, packet_t* packet);
+int network_recv_packet(int socket, packet_t* packet);
+
 /*
  * @brief Send packet to data link layer
  * @param socket The socket to send the packet to
