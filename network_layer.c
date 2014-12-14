@@ -100,6 +100,11 @@ int network_send(int sockfd, char* buffer, unsigned int len)
 	return bytes_sent;
 }
 
+int network_recv_packet(int socket, packet_t* packet)
+{
+	
+}
+
 int network_recv(int sockfd, char* buffer, unsigned int len)
 {
 

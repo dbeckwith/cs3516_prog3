@@ -5,12 +5,14 @@
 
 #define PKT_DATA_SIZE 200
 
+enum packet_types {DATA, ACK};
+
 typedef union {
     struct packet {
+    	char packet_type;
     	char data[PKT_DATA_SIZE];
     	char data_length;
     	char eof;
-        char ack;
     } packet;
     char buff[sizeof(struct packet)];
 } packet_t;
