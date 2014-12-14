@@ -14,6 +14,8 @@
  */
 int physical_connect(char *serverName, unsigned short serverPort)
 {
+    printf("%s Connect\n", PHYSICAL_STR);
+
     int serverSocket;
     struct addrinfo serverAddrHints; // Hints for finding server with DNS
     struct addrinfo *serverAddrInfo; // Server address info
@@ -78,6 +80,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
  */
 int physical_send(int socket, char* buffer, int buffer_size)
 {
+    printf("%s Send\n", PHYSICAL_STR);
     return send(socket, buffer, buffer_size, 0);
 }
 
@@ -90,6 +93,7 @@ int physical_send(int socket, char* buffer, int buffer_size)
  */
 int physical_recv(int socket, char* buffer, int buffer_size)
 {
+    printf("%s Receive\n", PHYSICAL_STR);
     return recv(socket, buffer, buffer_size, 0);
 }
 
@@ -101,6 +105,8 @@ int physical_recv(int socket, char* buffer, int buffer_size)
  */
 int physical_listen(unsigned short port, unsigned int max_pending_clients)
 {
+    printf("%s Listen\n", PHYSICAL_STR);
+    
     int serv_socket;
     struct sockaddr_in photo_serv_addr; // Local address
 
@@ -137,5 +143,6 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
  */
 int physical_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
 {
+    printf("%s Accept\n", PHYSICAL_STR);
     return accept(socket, client_addr, client_len);
 }

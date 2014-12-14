@@ -19,6 +19,8 @@ int network_recv_packet(int socket, packet_t* packet);
  */
 int network_send_packet(int socket, packet_t* packet)
 {
+	printf("%s Send Packet\n", NETWORK_STR);
+
 	packet_t ack_packet;
 	int bytes_sent;
 
@@ -50,6 +52,8 @@ int network_send_packet(int socket, packet_t* packet)
  */
 int network_send_file(int socket, char* file_name)
 {
+	printf("%s Send File\n", NETWORK_STR);
+
 	unsigned int read_size1;
 	unsigned int read_size2;
 	char read_buffer1[PKT_DATA_SIZE];
@@ -120,6 +124,8 @@ int network_send_file(int socket, char* file_name)
  */
 int network_send(int socket, char* buffer, unsigned int len)
 {
+	printf("%s Send\n", NETWORK_STR);
+
 	packet_t packet;
 	unsigned int pos;
 	unsigned int chunk_len;
@@ -146,6 +152,8 @@ int network_send(int socket, char* buffer, unsigned int len)
 
 int network_recv_packet(int socket, packet_t* packet)
 {
+	printf("%s Receive Packet\n", NETWORK_STR);
+
 	packet_t ack_packet;
 	int bytes_received;
 	int total_received;
@@ -169,6 +177,8 @@ int network_recv_packet(int socket, packet_t* packet)
 }
 
 int network_recv_file(int socket, char* file_name) {
+	printf("%s Receive File\n", NETWORK_STR);
+
 	packet_t packet;
 	FILE* output;
 	int bytes_received;
@@ -191,6 +201,8 @@ int network_recv_file(int socket, char* file_name) {
 }
 
 int network_recv(int socket, char* buffer, unsigned int len) {
+	printf("%s Receive\n", NETWORK_STR);
+
 	packet_t packet;
 	int bytes_received;
 
@@ -209,6 +221,7 @@ int network_recv(int socket, char* buffer, unsigned int len) {
  */
 int network_connect(char* url, unsigned short port)
 {
+	printf("%s Connect\n", NETWORK_STR);
 	return physical_connect(url, port);
 }
 
@@ -220,6 +233,7 @@ int network_connect(char* url, unsigned short port)
  */
 int network_listen(unsigned short port, unsigned int max_pending_clients)
 {
+	printf("%s Listen\n", NETWORK_STR);
 	return physical_listen(port, max_pending_clients);
 }
 
@@ -232,5 +246,6 @@ int network_listen(unsigned short port, unsigned int max_pending_clients)
  */
 int network_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
 {
+	printf("%s Accept\n", NETWORK_STR);
 	return physical_accept(socket, client_addr, client_len);
 }

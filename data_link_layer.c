@@ -5,6 +5,8 @@ int data_link_recv_frame(int socket, frame_t* frame);
 
 int data_link_send_frame(int socket, frame_t* frame)
 {
+	printf("%s Send Frame\n", DATA_LINK_STR);
+
 	frame_t ack_frame;	
 	int bytes_sent;
 
@@ -28,6 +30,8 @@ int data_link_send_frame(int socket, frame_t* frame)
 
 int data_link_send(int socket, char* buffer, int len)
 {
+	printf("%s Send\n", DATA_LINK_STR);
+
 	frame_t frame;
 	int pos;
 	unsigned int chunk_len;
@@ -55,6 +59,8 @@ int data_link_send(int socket, char* buffer, int len)
 
 int data_link_recv_frame(int socket, frame_t* frame)
 {
+	printf("%s Receive Frame\n", DATA_LINK_STR);
+
 	frame_t ack_frame;
 	int bytes_received;
 	int total_received;
@@ -80,6 +86,8 @@ int data_link_recv_frame(int socket, frame_t* frame)
 
 int data_link_recv(int socket, char* buffer, int len)
 {
+	printf("%s Receive\n", DATA_LINK_STR);
+
 	frame_t frame;
 	int bytes_received;
 
