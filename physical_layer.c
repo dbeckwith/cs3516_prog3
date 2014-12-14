@@ -6,47 +6,60 @@
 #include <netdb.h>
 #include "physical_layer.h"
 
-int physical_connect(char *serverName, unsigned short serverPort) {
+/*
+ * @brief Converts hostname and port number to IP address and connects socket
+ * @param serverName Hostname to connect to
+ * @param serverPort The port to connect to
+ * @return serverSocket The socket that has been connected
+ */
+int physical_connect(char *serverName, unsigned short serverPort)
+{
     int serverSocket;
-    struct addrinfo serverAddrHints; // hints for finding server with DNS
-    struct addrinfo *serverAddrInfo; // server address info
-    struct sockaddr *serverAddr; // server address
-    char serviceName[6]; // string version of "service" which is just the server port
+    struct addrinfo serverAddrHints; // Hints for finding server with DNS
+    struct addrinfo *serverAddrInfo; // Server address info
+    struct sockaddr *serverAddr; //     Server address
+    char serviceName[6]; //             String version of "service" which is just the server port
 
     printf("Connecting to server at %s:%d\n", serverName, serverPort);
 
-    sprintf(serviceName, "%d", serverPort); // convert port to string for service field
+    sprintf(serviceName, "%d", serverPort); // Convert port to string for service field
 
     memset(&serverAddrHints, 0, sizeof(struct addrinfo));
-    serverAddrHints.ai_family = AF_INET;    // allow internet address family
-    serverAddrHints.ai_socktype = SOCK_STREAM; // allow TCP type sockets
+    serverAddrHints.ai_family = AF_INET;    //    Allow internet address family
+    serverAddrHints.ai_socktype = SOCK_STREAM; // Allow TCP type sockets
 
-    // do a DNS lookup with the server name, the port number ("service"), and address hints
+    // Do a DNS lookup with the server name, the port number ("service"), and address hints
     if (getaddrinfo(serverName, serviceName, &serverAddrHints, &serverAddrInfo) != 0)
+    {
         exit_with_error("getaddrinfo() failed");
+    }
 
-    // serverAddrInfo is a linked list of possible addresses, go through each and try to connect
-    for (; serverAddrInfo != NULL; serverAddrInfo = serverAddrInfo->ai_next) {
-        // create a new socket from the info
-        if ((serverSocket = socket(serverAddrInfo->ai_family, serverAddrInfo->ai_socktype, serverAddrInfo->ai_protocol)) < 0) {
+    // ServerAddrInfo is a linked list of possible addresses, go through each and try to connect
+    for (; serverAddrInfo != NULL; serverAddrInfo = serverAddrInfo->ai_next)
+    {
+        // Create a new socket from the info
+        if ((serverSocket = socket(serverAddrInfo->ai_family, serverAddrInfo->ai_socktype, serverAddrInfo->ai_protocol)) < 0)
+        {
             continue;
         }
 
-        // get address
+        // Get address
         serverAddr = serverAddrInfo->ai_addr;
 
-        // try to connect
-        if (connect(serverSocket, serverAddr, sizeof(*serverAddr)) < 0) {
-            // didn't connect, close the socket and keep going
+        // Try to connect
+        if (connect(serverSocket, serverAddr, sizeof(*serverAddr)) < 0)
+        {
+            // Didn't connect, close the socket and keep going
             close(serverSocket);
             continue;
         }
-        // connected, break the loop
+        // Connected, break the loop
         break;
     }
 
-    // if got through the whole list and never connected, print an error
-    if (serverAddrInfo == NULL) {
+    // If got through the whole list and never connected, print an error
+    if (serverAddrInfo == NULL)
+    {
         return -1;
     }
 
@@ -56,16 +69,36 @@ int physical_connect(char *serverName, unsigned short serverPort) {
 
 }
 
+/*
+ * @brief Send given buffer to given socket
+ * @param socket The socket to send to
+ * @param buffer The buffer to send
+ * @param buffer_size The size of the buffer to send
+ * @return Result of send()
+ */
 int physical_send(int socket, char* buffer, int buffer_size)
 {
     return send(socket, buffer, buffer_size, 0);
 }
 
+/*
+ * @brief Receive given buffer from given socket
+ * @param socket The socket to receive from
+ * @param buffer The buffer to receive into
+ * @param buffer_size The size of the buffer to receive into
+ * @return Result of recv()
+ */
 int physical_recv(int socket, char* buffer, int buffer_size)
 {
     return recv(socket, buffer, buffer_size, 0);
 }
 
+/*
+ * @brief Listens on given port for a max number of clients
+ * @param port The port to listen on
+ * @param max_pending_clients The max number of clients to hold in connection queue
+ * @return ser_socket The server socket being listened to
+ */
 int physical_listen(unsigned short port, unsigned int max_pending_clients)
 {
     int serv_socket;
@@ -77,9 +110,9 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
     }
     
     memset(&photo_serv_addr, 0, sizeof(photo_serv_addr)); // Clear struct
-    photo_serv_addr.sin_family = AF_INET; // Internet address family
-    photo_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // Any incoming interface
-    photo_serv_addr.sin_port = htons(port); // Set port
+    photo_serv_addr.sin_family = AF_INET; //                 Internet address family
+    photo_serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); //  Any incoming interface
+    photo_serv_addr.sin_port = htons(port); //               Set port
 
     // Bind local address
     if (bind (serv_socket, (struct sockaddr*)&photo_serv_addr, sizeof(photo_serv_addr)) < 0)
@@ -95,7 +128,14 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
     return serv_socket;
 }
 
-int physical_accept(int socketfd, struct sockaddr* client_addr, unsigned int* client_len)
+/*
+ * @brief Call accept on new client
+ * @param socket The socket descriptor to accept
+ * @param client_addr The client address struct to accept
+ * @param client_len The length of the client address being given
+ * @return The client socket that is accepted
+ */
+int physical_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
 {
-    return accept(socketfd, client_addr, client_len);
+    return accept(socket, client_addr, client_len);
 }

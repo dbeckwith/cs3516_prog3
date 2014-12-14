@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 	char* photo_file_name;
 	unsigned int photo_file_name_len;
 
+	// Bad arguments
 	if (argc < 4)
 	{
 		fprintf(stderr, "Usage: %s <Server IP> <Client ID> <Photo Count> \n", argv[0]);
@@ -37,20 +38,20 @@ int main(int argc, char* argv[])
 		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
 		printf("%s\n", photo_file_name);
 
-        // send photo name
+        // Send photo name
 		if (network_send(sock, photo_file_name, photo_file_name_len) != photo_file_name_len)
 		{
 			exit_with_error("send() sent a different number of bytes than expected");
 		}
 
-        // send photo to server
+        // Send photo to server
         if (network_send_file(sock, photo_file_name) < 0) {
             exit_with_error("send file");
         }
 
 		if (photo_num == photo_count - 1)
 		{
-            // just sent last photo, tell server we're done
+            // Just sent last photo, tell server we're done
 			if (network_send(sock, DONE_CMD, DONE_CMD_LEN) != DONE_CMD_LEN)
 			{
 				exit_with_error("send() sent a different number of bytes than expected");
@@ -58,7 +59,7 @@ int main(int argc, char* argv[])
 		}
 		else
 		{
-            // tell server to wait for another photo
+            // Tell server to wait for another photo
 			if (network_send(sock, NEXT_CMD, NEXT_CMD_LEN) != NEXT_CMD_LEN)
 			{
 				exit_with_error("send() sent a different number of bytes than expected");

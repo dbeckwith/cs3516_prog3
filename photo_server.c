@@ -10,32 +10,31 @@
 #include "util.h"
 #include "network_layer.h"
 
-#define MAXPENDING 5
-#define RCVBUFSIZE 256
-#define ACK "ack"
+#define MAXPENDING 5 //   Max number of clients in queue
+#define RCVBUFSIZE 256 // TODO: Remove this
+#define ACK "ack" //      TODO: Remove this
 
+
+/*
+ * @brief Handles client given a socket. Receives photo name and calls protocols in lower levels to handle receiving packets from client.
+ * @param client_socket The socket to receive the photo(s) from
+ */
 void handle_client(int client_socket)
 {
-	char echoBuffer[RCVBUFSIZE];
-	char photo_file_name[RCVBUFSIZE];
-	FILE* output;
-	int recvMsgSize;
-	int client_id, photo_id;
+	char input_buffer[RCVBUFSIZE]; //        Buffer for client data
+	char photo_file_name[RCVBUFSIZE]; //     Buffer for output photo file name
+	FILE* output; //                         Output file
+	int recvMsgSize, client_id, photo_id;
 
-	while (strcmp(echoBuffer, DONE_CMD) != 0)
+	while (strcmp(input_buffer, DONE_CMD) != 0)
 	{
+		// Get the file name that will be the new photo
 		if ((recvMsgSize = recv(client_socket, photo_file_name, RCVBUFSIZE, 0)) < 0)
 		{
 			exit_with_error("Recv() failed");
 		}
 
-		// int len = strlen(photo_file_name) - 1;
-		// for (int i = len; i > len - 5; i--)
-		// {
-		// 	photo_file_name[i] = '\0';
-		// }
-		// strcat(photo_file_name, "new.jpg");
-
+		// Format the name to the new file name
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
 		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
@@ -45,20 +44,20 @@ void handle_client(int client_socket)
 			exit(1);
 		}	
 
-		while (strcmp(echoBuffer, NEXT_CMD) != 0 && strcmp(echoBuffer, DONE_CMD) != 0)
+		// While not DONE or NEXT FILE, keep receving photo packets
+		while (strcmp(input_buffer, NEXT_CMD) != 0 && strcmp(input_buffer, DONE_CMD) != 0)
 		{
 			if (send(client_socket, ACK, strlen(ACK), 0) != strlen(ACK))
 			{
 				exit_with_error("Send() failed");
 			}
 
-			memset(echoBuffer, 0, RCVBUFSIZE);
-			if ((recvMsgSize = recv(client_socket, echoBuffer, RCVBUFSIZE, 0)) < 0)
+			memset(input_buffer, 0, RCVBUFSIZE);
+			if ((recvMsgSize = recv(client_socket, input_buffer, RCVBUFSIZE, 0)) < 0)
 			{
 				exit_with_error("Recv() failed");
 			}
-			//fprintf(output, "%s", echoBuffer);
-			fwrite(echoBuffer, 1, RCVBUFSIZE, output);
+			fwrite(input_buffer, 1, RCVBUFSIZE, output);
 		}
 		fclose(output);
 
@@ -70,6 +69,10 @@ void handle_client(int client_socket)
 	close(client_socket);
 }
 
+/*
+ * @brief Function for thread to run when a new client is accepted. Handles client by receiving packets of photos
+ * @param *arg The client socket to handle
+ */
 void *server_thread(void *arg)
 {
 	handle_client((long) arg);
@@ -77,10 +80,10 @@ void *server_thread(void *arg)
 
 int main(int argc, char *argv[])
 {
-	int serv_socket; // Server socket
-	long client_socket; // Client socket
+	int serv_socket; //                      Server socket
+	long client_socket; //                   Client socket
 	struct sockaddr_in photo_client_addr; // Client address
-	unsigned int client_addr_len; // Length of client address data structure
+	unsigned int client_addr_len; //         Length of client address data structure
 	
 	if (argc != 1)
 	{ 
@@ -88,9 +91,12 @@ int main(int argc, char *argv[])
 		exit(1); 
 	}
 
-	if ((serv_socket = network_listen(SERVER_PORT, MAXPENDING)) < 0) {
+	if ((serv_socket = network_listen(SERVER_PORT, MAXPENDING)) < 0)
+	{
 		exit_with_error("listen() failed");
 	}
+
+	// Server runs continuously
 	while (true)
 	{
 		client_addr_len = sizeof(photo_client_addr); // Length of client address
@@ -99,6 +105,7 @@ int main(int argc, char *argv[])
 		{
 			exit_with_error("accept() failed");
 		}
+
 		printf("Handling client %s : %d\n", inet_ntoa(photo_client_addr.sin_addr), client_socket);
 		
 		pthread_t tid;
@@ -106,6 +113,6 @@ int main(int argc, char *argv[])
 		{
 			exit_with_error("Thread error");
 		}
-		pthread_detach(tid);
+		pthread_detach(tid); // TODO: Do we still want this?
 	}
 }
