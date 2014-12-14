@@ -26,7 +26,7 @@ int network_send_packet(int socket, packet_t* packet)
 	}
 
 	// Check if packet is ACKed successfully
-	if (data_link_recv(socket, &ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff))
+	if (data_link_recv(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff))
 	{
 		return -1;
 	}
@@ -126,6 +126,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 	for (pos = 0; pos < len; pos += PKT_DATA_SIZE)
 	{
 		packet.packet.eof = pos + PKT_DATA_SIZE >= len;
+		packet.packet.ack = false;
 
 		if (packet.packet.eof)
 		{
@@ -145,13 +146,28 @@ int network_send(int socket, char* buffer, unsigned int len)
 
 int network_recv_packet(int socket, packet_t* packet)
 {
-	// TODO: This function
-}
+	frame_t frame_1;
+	frame_t frame_2;
+	frame_1.frame.data_length = 0;
+	frame_2.frame.data_length = 0;
 
-int network_recv(int socket, char* buffer, unsigned int len)
-{
-	// TODO: This function
-}
+	if (data_link_recv(socket, &frame_1) == sizeof(frame_t))
+	{
+		memcpy(packet->buff, frame_1.frame.data, frame_1.frame.data_length);
+		if (data_link_recv(socket, &frame_2) == sizeof(frame_t))
+		{
+			if (frame_1.frame.data_length + frame_2.data.data_length == sizeof(packet_t))
+			{
+				memcpy(packet->buff + frame_1.frame.data_length, frame_2.frame.data, frame_2.frame.data_length);
+
+				packet_t ack_packet;
+				ack_packet.packet.ack = true;
+				data_link_send(socket, ack_packet.buff, sizeof(ack_packet));
+			}
+		}
+		return frame_1.frame.data_length + frame_2.frame.data_length;
+	}
+	return frame_1.frame.data_length;
 
 /*
  * @brief Call physical layer connect on given url and port
