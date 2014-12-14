@@ -20,7 +20,7 @@ int network_send_packet(int socket, packet_t* packet)
 	unsigned int bytes_sent;
 
 	// Check if packet is sent successfully
-	if ((bytes_sent = data_link_send(socket, packet.buff, sizeof(packet.buff)) < 0) != sizeof(packet.buff))
+	if ((bytes_sent = data_link_send(socket, packet->buff, sizeof(packet->buff)) < 0) != sizeof(packet->buff))
 	{
 		return bytes_sent;
 	}
@@ -32,7 +32,7 @@ int network_send_packet(int socket, packet_t* packet)
 	}
 
 	// Check if returned ACK is valid ACK packet
-	if (ack_packet.ack)
+	if (ack_packet.packet.ack)
 	{
 		return bytes_sent;
 	}

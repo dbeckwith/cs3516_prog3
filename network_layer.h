@@ -6,14 +6,12 @@
 #define NETWORK_STR "NETWORK LAYER" // String to display for debugging at network layer
 #define PKT_DATA_SIZE 200
 
-enum packet_types {DATA, ACK}; // Defines types of packets
-
 // Union defintion for packet for easy conversion to bytes to pass as frames
 typedef union
 {
     struct packet
     {
-    	char packet_type;
+        char ack;
     	char data[PKT_DATA_SIZE];
     	char data_length;
     	char eof; // End of file indication
