@@ -39,6 +39,12 @@ int main(int argc, char* argv[])
 	photo_count = atoi(argv[3]);
 	client_id = atoi(argv[2]);
 
+	memcpy(send_buff, &client_id, 4);
+	if (network_send(sock, send_buff, 4) != 4)
+	{
+		exit_with_error("Network_send() sent a different number of bytes than expected for file name length");
+	}
+
 	for (photo_num = 0; photo_num < photo_count; photo_num++)
 	{
 		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);

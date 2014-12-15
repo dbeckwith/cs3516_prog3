@@ -87,6 +87,13 @@ void handle_client(int client_socket)
 			exit_with_error("Recv() failed");
 		}
 
+		memcpy(&client_id, recv_buff, 4);
+
+		if (recv_message(client_socket, recv_buff, 4) != 4)
+		{
+			exit_with_error("Recv() failed");
+		}
+
 		memcpy(&photo_file_len, recv_buff, 4);
 
 		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len)
