@@ -24,12 +24,12 @@ int data_link_send_frame(int socket, frame_t* frame)
 
     frame->frame.ack = false;
 
-	if ((bytes_sent = physical_send(socket, frame->buff, sizeof(frame->buff))) != sizeof(frame->buff))
+	if ((bytes_sent = physical_send(socket, frame->bytes, sizeof(frame->bytes))) != sizeof(frame->bytes))
 	{
 		return bytes_sent;
 	}
 
-	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.buff))
+	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.bytes))
 	{
 		return -1;
 	}
@@ -96,9 +96,9 @@ int data_link_recv_frame(int socket, frame_t* frame)
 	ack_frame.frame.data_length = 0;
 	ack_frame.frame.eof = false;
 
-	while (total_received < sizeof(frame->buff))
+	while (total_received < sizeof(frame->bytes))
 	{
-		if ((bytes_received = physical_recv(socket, frame->buff + total_received, sizeof(frame->buff) - total_received)) <= 0) {
+		if ((bytes_received = physical_recv(socket, frame->bytes + total_received, sizeof(frame->bytes) - total_received)) <= 0) {
 			return -1;
 		}
 		total_received += bytes_received;
@@ -106,7 +106,7 @@ int data_link_recv_frame(int socket, frame_t* frame)
     
 	if (!frame->frame.ack) {
 		ack_frame.frame.ack = true;
-		if (physical_send(socket, ack_frame.buff, sizeof(ack_frame.buff)) != sizeof(ack_frame.buff)) {
+		if (physical_send(socket, ack_frame.bytes, sizeof(ack_frame.bytes)) != sizeof(ack_frame.bytes)) {
 			return -1;
 		}
 	}
@@ -118,10 +118,10 @@ int data_link_recv_frame(int socket, frame_t* frame)
  * @brief Receive buffer from data link layer in frames
  * @param socket The socket to receive the frame from
  * @param buffer The buffer that is to be received
- * @param len The length of the given buffer
+ * @param buffer_size The length of the given buffer
  * @return bytes_received The number of bytes received, or -1 on error
  */
-int data_link_recv(int socket, uint8_t* buffer, int len)
+int data_link_recv(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
 	frame_t frame;
 	int bytes_received;
@@ -129,6 +129,7 @@ int data_link_recv(int socket, uint8_t* buffer, int len)
 	if (data_link_recv_frame(socket, &frame) != sizeof(frame_t)) {
 		return -1;
 	}
-	memcpy(buffer, frame.frame.data, bytes_received = frame.frame.data_length);
+	bytes_received = frame.frame.data_length;
+	memcpy(buffer, frame.frame.data, bytes_received > buffer_size? buffer_size : bytes_received);
 	return bytes_received;
 }

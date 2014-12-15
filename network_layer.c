@@ -245,7 +245,8 @@ int network_recv(int socket, uint8_t* buffer, unsigned int buffer_size)
 	{
 		return -1;
 	}
-	memcpy(buffer, packet.packet.data, bytes_received = packet.packet.data_length);
+	bytes_received = packet.packet.data_length;
+	memcpy(buffer, packet.packet.data, bytes_received > buffer_size? buffer_size : bytes_received);
 	return bytes_received;
 }
 
