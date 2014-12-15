@@ -46,24 +46,24 @@ int data_link_send_frame(int socket, frame_t* frame)
  * @brief Send buffer to data link layer in frames
  * @param socket The socket to send the frames to
  * @param buffer The buffer that is to be sent
- * @param len The length of the given buffer
+ * @param buffer_size The length of the given buffer
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int data_link_send(int socket, uint8_t* buffer, int len)
+int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
 	frame_t frame;
-	int pos;
+	unsigned int pos;
 	unsigned int chunk_len;
 	int bytes_sent;
 	bytes_sent = 0;
 
 	chunk_len = FRAME_DATA_SIZE;
 
-	for (pos = 0; pos < len; pos += FRAME_DATA_SIZE)
+	for (pos = 0; pos < buffer_size; pos += FRAME_DATA_SIZE)
 	{
-		if (pos + FRAME_DATA_SIZE >= len)
+		if (pos + FRAME_DATA_SIZE >= buffer_size)
 		{
-			chunk_len = len - pos;
+			chunk_len = buffer_size - pos;
 		}
 		memcpy(frame.frame.data, buffer + pos, chunk_len);
 		frame.frame.data_length = chunk_len;

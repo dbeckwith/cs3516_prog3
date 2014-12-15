@@ -11,7 +11,8 @@
 #include "network_layer.h"
 
 #define CLIENT_STR "[PHOTO CLIENT]: "
-#define SENDBUFLEN 256
+#define SENDBUFSIZE 256
+#define MAXFILENAME 256
 
 int main(int argc, char* argv[])
 {
@@ -19,8 +20,8 @@ int main(int argc, char* argv[])
     int photo_count;
     int photo_num;
     int client_id;
-    uint8_t send_buff[SENDBUFLEN];
-	char photo_file_name[1000];
+    uint8_t send_buff[SENDBUFSIZE];
+	char photo_file_name[MAXFILENAME];
 	unsigned int photo_file_name_len;
 
 	// Bad arguments

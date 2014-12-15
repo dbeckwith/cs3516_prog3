@@ -18,12 +18,12 @@ typedef union
     	uint8_t eof;
     	uint8_t error_detect[2];
     } frame;
-    uint8_t buff[sizeof(struct frame)];
+    uint8_t bytes[sizeof(struct frame)];
 } frame_t;
 
 // Function definitions
 
-int data_link_send(int socket, uint8_t* buffer, int len);
-int data_link_recv(int socket, uint8_t* buffer, int len);
+int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size);
+int data_link_recv(int socket, uint8_t* buffer, unsigned int buffer_size);
 
 #endif

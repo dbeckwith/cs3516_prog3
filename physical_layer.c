@@ -78,7 +78,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
  * @param buffer_size The size of the buffer to send
  * @return Result of send()
  */
-int physical_send(int socket, uint8_t* buffer, int buffer_size)
+int physical_send(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
     return send(socket, buffer, buffer_size, 0);
 }
@@ -90,7 +90,7 @@ int physical_send(int socket, uint8_t* buffer, int buffer_size)
  * @param buffer_size The size of the buffer to receive into
  * @return Result of recv()
  */
-int physical_recv(int socket, uint8_t* buffer, int buffer_size)
+int physical_recv(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
     return recv(socket, buffer, buffer_size, 0);
 }

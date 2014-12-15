@@ -24,13 +24,13 @@ int network_send_packet(int socket, packet_t* packet)
 	int bytes_sent;
 
 	// Check if packet is sent successfully
-	if ((bytes_sent = data_link_send(socket, packet->buff, sizeof(packet->buff))) != sizeof(packet->buff))
+	if ((bytes_sent = data_link_send(socket, packet->bytes, sizeof(packet->bytes))) != sizeof(packet->bytes))
 	{
 		return bytes_sent;
 	}
 
 	// Check if packet is ACKed successfully
-	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.buff))
+	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.bytes))
 	{
 		return -1;
 	}
@@ -122,10 +122,10 @@ int network_send_file(int socket, char* file_name)
  * @brief Send a buffer of some length to the socket
  * @param socket The socket to send the packet to
  * @param buffer The buffer to be sent
- * @param len The length of given buffer
+ * @param buffer_size The length of given buffer
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int network_send(int socket, uint8_t* buffer, unsigned int len)
+int network_send(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
 	packet_t packet;
 	unsigned int pos;
@@ -134,11 +134,11 @@ int network_send(int socket, uint8_t* buffer, unsigned int len)
 	bytes_sent = 0;
 
 	chunk_len = PKT_DATA_SIZE;
-	for (pos = 0; pos < len; pos += PKT_DATA_SIZE)
+	for (pos = 0; pos < buffer_size; pos += PKT_DATA_SIZE)
 	{
-		if (pos + PKT_DATA_SIZE >= len)
+		if (pos + PKT_DATA_SIZE >= buffer_size)
 		{
-			chunk_len = len - pos;
+			chunk_len = buffer_size - pos;
 		}
 		memcpy(packet.packet.data, buffer + pos, chunk_len);
 		packet.packet.data_length = chunk_len;
@@ -170,9 +170,9 @@ int network_recv_packet(int socket, packet_t* packet)
 	ack_packet.packet.eof = false;
 	ack_packet.packet.data_length = 0;
 
-	while (total_received < sizeof(packet->buff))
+	while (total_received < sizeof(packet->bytes))
 	{
-		if ((bytes_received = data_link_recv(socket, packet->buff + total_received, sizeof(packet->buff) - total_received)) <= 0)
+		if ((bytes_received = data_link_recv(socket, packet->bytes + total_received, sizeof(packet->bytes) - total_received)) <= 0)
 		{
 			return -1;
 		}
@@ -181,7 +181,7 @@ int network_recv_packet(int socket, packet_t* packet)
 
 	if (!packet->packet.ack)
 	{
-		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff))
+		if (data_link_send(socket, ack_packet.bytes, sizeof(ack_packet.bytes)) != sizeof(ack_packet.bytes))
 		{
 			return -1;
 		}
@@ -233,10 +233,10 @@ int network_recv_file(int socket, char* file_name)
  * @brief Receive a buffer of some length from the socket
  * @param socket The socket to receive the packet from
  * @param buffer The buffer to be filled
- * @param len The length of given buffer
+ * @param buffer_size The length of given buffer
  * @return bytes_received The number of bytes received, or -1 on error
  */
-int network_recv(int socket, uint8_t* buffer, unsigned int len)
+int network_recv(int socket, uint8_t* buffer, unsigned int buffer_size)
 {
 	packet_t packet;
 	int bytes_received;
