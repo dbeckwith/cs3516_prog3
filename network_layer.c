@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "util.h"
 #include "network_layer.h"
 #include "data_link_layer.h"
 #include "physical_layer.h"
@@ -19,8 +20,6 @@ int network_recv_packet(int socket, packet_t* packet);
  */
 int network_send_packet(int socket, packet_t* packet)
 {
-	printf("%s Send Packet\n", NETWORK_STR);
-
 	packet_t ack_packet;
 	int bytes_sent;
 
@@ -30,25 +29,15 @@ int network_send_packet(int socket, packet_t* packet)
 		return bytes_sent;
 	}
 
-    printf("packet contents: len = %d\n", packet->packet.data_length);
-    int i;
-    for (i = 0; i < packet->packet.data_length; i++) {
-        printf("%x ", packet->packet.data[i]);
-    }
-    printf("\n");
-
-	printf("receiving packet ack\n");
 	// Check if packet is ACKed successfully
 	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.buff))
 	{
-		printf("networkrecvpacketack -1\n");
 		return -1;
 	}
 
 	// Check if returned ACK is valid ACK packet
 	if (ack_packet.packet.ack)
 	{
-		printf("got ack network send packet\n");
 		return bytes_sent;
 	}
 	return -1;
@@ -62,8 +51,6 @@ int network_send_packet(int socket, packet_t* packet)
  */
 int network_send_file(int socket, uint8_t* file_name)
 {
-	printf("%s Send File\n", NETWORK_STR);
-
 	unsigned int read_size1;
 	unsigned int read_size2;
 	uint8_t read_buffer1[PKT_DATA_SIZE];
@@ -140,8 +127,6 @@ int network_send_file(int socket, uint8_t* file_name)
  */
 int network_send(int socket, uint8_t* buffer, unsigned int len)
 {
-	printf("%s Send\n", NETWORK_STR);
-
 	packet_t packet;
 	unsigned int pos;
 	unsigned int chunk_len;
@@ -162,7 +147,6 @@ int network_send(int socket, uint8_t* buffer, unsigned int len)
 		
 		if (network_send_packet(socket, &packet) != sizeof(packet_t))
 		{
-			printf("networksentpacket -1\n");
 			return -1;
 		}
 		bytes_sent += chunk_len;
@@ -170,10 +154,14 @@ int network_send(int socket, uint8_t* buffer, unsigned int len)
 	return bytes_sent;
 }
 
+/*
+ * @brief Receive packet to data link layer
+ * @param socket The socket to receive the packet from
+ * @param packet The packet struct that is to be filled
+ * @return total_received The number of bytes received, or -1 on error
+ */
 int network_recv_packet(int socket, packet_t* packet)
 {
-	printf("%s Receive Packet\n", NETWORK_STR);
-
 	packet_t ack_packet;
 	int bytes_received;
 	int total_received;
@@ -182,30 +170,19 @@ int network_recv_packet(int socket, packet_t* packet)
 	ack_packet.packet.eof = false;
 	ack_packet.packet.data_length = 0;
 
-	while (total_received < sizeof(packet->buff)) {
-		if ((bytes_received = data_link_recv(socket, packet->buff + total_received, sizeof(packet->buff) - total_received)) <= 0) {
+	while (total_received < sizeof(packet->buff))
+	{
+		if ((bytes_received = data_link_recv(socket, packet->buff + total_received, sizeof(packet->buff) - total_received)) <= 0)
+		{
 			return -1;
 		}
 		total_received += bytes_received;
 	}
 
-	if (packet->packet.ack)
+	if (!packet->packet.ack)
 	{
-		printf("ack frame data recv\n");
-	}
-	else
-	{
-	    printf("packet contents: len = %d\n", packet->packet.data_length);
-	    int i;
-	    for (i = 0; i < packet->packet.data_length; i++) {
-	        printf("%x ", packet->packet.data[i]);
-	    }
-	    printf("\n");
-	}
-
-	printf("sending packet ack\n");
-	if (!packet->packet.ack) {
-		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
+		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff))
+		{
 			return -1;
 		}
 	}
@@ -213,25 +190,35 @@ int network_recv_packet(int socket, packet_t* packet)
 	return total_received;
 }
 
-int network_recv_file(int socket, uint8_t* file_name) {
-	printf("%s Receive File\n", NETWORK_STR);
-
+/*
+ * @brief Receive packets of file and write out to new photo file
+ * @param socket The socketto receive from
+ * @param file_name The file to output the photo to
+ * @return bytes_received The bytes received in packets, or -1 on error
+ */
+int network_recv_file(int socket, uint8_t* file_name)
+{
 	packet_t packet;
 	FILE* output;
 	int bytes_received;
 	bytes_received = 0;
 
-	if ((output = fopen(file_name, "wb")) == NULL) {
+	if ((output = fopen(file_name, "wb")) == NULL)
+	{
 		return -1;
 	}
 
 	packet.packet.eof = false;
-	while (!packet.packet.eof) {
-		if (network_recv_packet(socket, &packet) != sizeof(packet)) {
+	while (!packet.packet.eof)
+	{
+		if (network_recv_packet(socket, &packet) != sizeof(packet))
+		{
 			return -1;
 		}
+
 		bytes_received += packet.packet.data_length;
-		if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length) {
+		if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length)
+		{
 			return bytes_received;
 		}
 	}
@@ -242,13 +229,20 @@ int network_recv_file(int socket, uint8_t* file_name) {
 	return bytes_received;
 }
 
-int network_recv(int socket, uint8_t* buffer, unsigned int len) {
-	printf("%s Receive\n", NETWORK_STR);
-
+/*
+ * @brief Receive a buffer of some length from the socket
+ * @param socket The socket to receive the packet from
+ * @param buffer The buffer to be filled
+ * @param len The length of given buffer
+ * @return bytes_received The number of bytes received, or -1 on error
+ */
+int network_recv(int socket, uint8_t* buffer, unsigned int len)
+{
 	packet_t packet;
 	int bytes_received;
 
-	if (network_recv_packet(socket, &packet) != sizeof(packet_t)) {
+	if (network_recv_packet(socket, &packet) != sizeof(packet_t))
+	{
 		return -1;
 	}
 	memcpy(buffer, packet.packet.data, bytes_received = packet.packet.data_length);
@@ -263,7 +257,6 @@ int network_recv(int socket, uint8_t* buffer, unsigned int len) {
  */
 int network_connect(char* url, unsigned short port)
 {
-	printf("%s Connect\n", NETWORK_STR);
 	return physical_connect(url, port);
 }
 
@@ -275,7 +268,6 @@ int network_connect(char* url, unsigned short port)
  */
 int network_listen(unsigned short port, unsigned int max_pending_clients)
 {
-	printf("%s Listen\n", NETWORK_STR);
 	return physical_listen(port, max_pending_clients);
 }
 
@@ -288,6 +280,5 @@ int network_listen(unsigned short port, unsigned int max_pending_clients)
  */
 int network_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
 {
-	printf("%s Accept\n", NETWORK_STR);
 	return physical_accept(socket, client_addr, client_len);
 }

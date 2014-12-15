@@ -3,7 +3,7 @@
 #ifndef DATA_LINK_LAYER_H
 #define DATA_LINK_LAYER_H
 
-#define DATA_LINK_STR "[DATA LINK LAYER]" // String to display for debugging at data link layer
+#define DATA_LINK_STR "[DATA LINK LAYER]: " // String to display for debugging at data link layer
 #define FRAME_DATA_SIZE 124
 
 // Union definition for frame for easy conversion to bytes to send

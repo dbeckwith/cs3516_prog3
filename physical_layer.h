@@ -3,7 +3,7 @@
 #ifndef PHYSICAL_LAYER_H
 #define PHYSICAL_LAYER_H
 
-#define PHYSICAL_STR "[PHYSICAL LAYER]" // String to display for debugging at physical layer
+#define PHYSICAL_STR "[PHYSICAL LAYER]: " // String to display for debugging at physical layer
 
 // Function definitions
 

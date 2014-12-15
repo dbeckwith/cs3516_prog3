@@ -5,6 +5,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include "util.h"
 #include "physical_layer.h"
 
 /*
@@ -15,15 +16,13 @@
  */
 int physical_connect(char *serverName, unsigned short serverPort)
 {
-    printf("%s Connect\n", PHYSICAL_STR);
-
     int serverSocket;
     struct addrinfo serverAddrHints; // Hints for finding server with DNS
     struct addrinfo *serverAddrInfo; // Server address info
     struct sockaddr *serverAddr; //     Server address
     char serviceName[6]; //             String version of "service" which is just the server port
 
-    printf("Connecting to server at %s:%d\n", serverName, serverPort);
+    printf(PHYSICAL_STR "Connecting to server at %s:%d\n", serverName, serverPort);
 
     sprintf(serviceName, "%d", serverPort); // Convert port to string for service field
 
@@ -34,7 +33,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
     // Do a DNS lookup with the server name, the port number ("service"), and address hints
     if (getaddrinfo(serverName, serviceName, &serverAddrHints, &serverAddrInfo) != 0)
     {
-        exit_with_error("getaddrinfo() failed");
+        exit_with_error("Getaddrinfo() failed");
     }
 
     // ServerAddrInfo is a linked list of possible addresses, go through each and try to connect
@@ -66,7 +65,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
         return -1;
     }
 
-    printf("Connected to server at %s\n", inet_ntoa(((struct sockaddr_in *)serverAddr)->sin_addr));
+    printf(PHYSICAL_STR "Connected to server at %s\n", inet_ntoa(((struct sockaddr_in *)serverAddr)->sin_addr));
 
     return serverSocket;
 
@@ -81,7 +80,6 @@ int physical_connect(char *serverName, unsigned short serverPort)
  */
 int physical_send(int socket, uint8_t* buffer, int buffer_size)
 {
-    printf("%s Send\n", PHYSICAL_STR);
     return send(socket, buffer, buffer_size, 0);
 }
 
@@ -94,7 +92,6 @@ int physical_send(int socket, uint8_t* buffer, int buffer_size)
  */
 int physical_recv(int socket, uint8_t* buffer, int buffer_size)
 {
-    printf("%s Receive\n", PHYSICAL_STR);
     return recv(socket, buffer, buffer_size, 0);
 }
 
@@ -106,8 +103,6 @@ int physical_recv(int socket, uint8_t* buffer, int buffer_size)
  */
 int physical_listen(unsigned short port, unsigned int max_pending_clients)
 {
-    printf("%s Listen\n", PHYSICAL_STR);
-    
     int serv_socket;
     struct sockaddr_in photo_serv_addr; // Local address
 
@@ -144,6 +139,5 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
  */
 int physical_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
 {
-    printf("%s Accept\n", PHYSICAL_STR);
     return accept(socket, client_addr, client_len);
 }

@@ -11,7 +11,8 @@
 #include "network_layer.h"
 
 #define MAXPENDING 5 //   Max number of clients in queue
-#define RCVBUFSIZE 256 // TODO: Remove this
+#define RCVBUFSIZE 256
+#define SERVER_STR "[PHOTO SERVER]: "
 
 int recv_message(int socket, char* buffer, unsigned int len);
 void handle_client(int client_socket);
@@ -40,7 +41,7 @@ int main(int argc, char *argv[])
 
 	if ((serv_socket = network_listen(SERVER_PORT, MAXPENDING)) < 0)
 	{
-		exit_with_error("listen() failed");
+		exit_with_error("Network_listen() failed");
 	}
 
 	// Server runs continuously
@@ -48,19 +49,19 @@ int main(int argc, char *argv[])
 	{
 		client_addr_len = sizeof(photo_client_addr); // Length of client address
 
-		if ((client_socket = network_accept(serv_socket, (struct sockaddr*) &photo_client_addr, &client_addr_len)) < 0) 
+		if ((client_socket = network_accept(serv_socket, (struct sockaddr*)&photo_client_addr, &client_addr_len)) < 0) 
 		{
-			exit_with_error("accept() failed");
+			exit_with_error("Network_accept() failed");
 		}
 
-		printf("Handling client %s : %d\n", inet_ntoa(photo_client_addr.sin_addr), client_socket);
+		printf(SERVER_STR "Handling client %s : %d\n", inet_ntoa(photo_client_addr.sin_addr), client_socket);
 		
 		pthread_t tid;
 		if (pthread_create(&tid, NULL, server_thread, (void*)client_socket) != 0)
 		{
 			exit_with_error("Thread error");
 		}
-		pthread_detach(tid); // TODO: Do we still want this?
+		pthread_detach(tid);
 	}
 }
 
@@ -81,14 +82,15 @@ void handle_client(int client_socket)
 	command = -1;
 	while (command != DONE_CMD)
 	{
-		printf("receiving name length\n");
-		if (recv_message(client_socket, recv_buff, 4) != 4) {
+		if (recv_message(client_socket, recv_buff, 4) != 4)
+		{
 			exit_with_error("Recv() failed");
 		}
+
 		memcpy(&photo_file_len, recv_buff, 4);
 
-		printf("receiving name\n");
-		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len) {
+		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len)
+		{
 			exit_with_error("Recv() failed");
 		}
 		photo_file_name = (char*)malloc(photo_file_len);
@@ -98,14 +100,14 @@ void handle_client(int client_socket)
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
 		sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
-		printf("receiving file\n");
 		// While not DONE or NEXT FILE, keep receving photo packets
-		if (network_recv_file(client_socket, photo_file_name) < 0) {
-			exit_with_error("Recv() failed");
+		if (network_recv_file(client_socket, photo_file_name) < 0)
+		{
+			exit_with_error("Network_recv() failed");
 		}
 
-		printf("receiving command\n");
-		if (recv_message(client_socket, recv_buff, 1) != 1) {
+		if (recv_message(client_socket, recv_buff, 1) != 1)
+		{
 			exit_with_error("Recv() failed");
 		}
 		command = recv_buff[0];
@@ -116,15 +118,16 @@ void handle_client(int client_socket)
 /*
 Receives exactly len bytes from the client.
 */
-int recv_message(int socket, char* buffer, unsigned int len) {
+int recv_message(int socket, char* buffer, unsigned int len)
+{
 	unsigned int pos;
 	int chunk_len;
 
-	for (pos = 0; pos < len; pos += chunk_len) {
-		printf("recv_message: calling network_recv\n");
+	for (pos = 0; pos < len; pos += chunk_len)
+	{
 		chunk_len = network_recv(socket, buffer + pos, len - pos);
-		if (chunk_len <= 0) {
-			printf("recv_message: pos = %d, chunk_len was %d\n", pos, chunk_len);
+		if (chunk_len <= 0)
+		{
 			return pos;
 		}
 	}

@@ -11,10 +11,14 @@
 int data_link_send_frame(int socket, frame_t* frame);
 int data_link_recv_frame(int socket, frame_t* frame);
 
+/*
+ * @brief Send frame to physical layer
+ * @param socket The socket to send the frame to
+ * @param frame The frame struct that is to be sent
+ * @return bytes_sent The number of bytes sent, or -1 on error
+ */
 int data_link_send_frame(int socket, frame_t* frame)
 {
-	printf("%s Send Frame\n", DATA_LINK_STR);
-
 	frame_t ack_frame;	
 	int bytes_sent;
 
@@ -25,20 +29,10 @@ int data_link_send_frame(int socket, frame_t* frame)
 		return bytes_sent;
 	}
 
-    printf("frame contents: len = %d\n", frame->frame.data_length);
-    int i;
-    for (i = 0; i < frame->frame.data_length; i++) {
-        printf("%x ", frame->frame.data[i]);
-    }
-    printf("\n");
-
-    printf("receiving frame ack\n");
 	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.buff))
 	{
 		return -1;
 	}
-
-	printf("receiving act frame%d\n", ack_frame.frame.ack);
 
 	if (ack_frame.frame.ack)
 	{
@@ -48,10 +42,15 @@ int data_link_send_frame(int socket, frame_t* frame)
 	return -1;
 }
 
+/*
+ * @brief Send buffer to data link layer in frames
+ * @param socket The socket to send the frames to
+ * @param buffer The buffer that is to be sent
+ * @param len The length of the given buffer
+ * @return bytes_sent The number of bytes sent, or -1 on error
+ */
 int data_link_send(int socket, uint8_t* buffer, int len)
 {
-	printf("%s Send\n", DATA_LINK_STR);
-
 	frame_t frame;
 	int pos;
 	unsigned int chunk_len;
@@ -73,20 +72,21 @@ int data_link_send(int socket, uint8_t* buffer, int len)
 
 		if (data_link_send_frame(socket, &frame) != sizeof(frame_t))
 		{
-			printf("datalinksendframe not equal -1\n");
 			return -1;
 		}
-		printf("%d bytes sentincre\n",bytes_sent );
 		bytes_sent += chunk_len;
 	}
-	printf("%dbytes sent%d\n", bytes_sent, len);
 	return bytes_sent;
 }
 
+/*
+ * @brief Receive frame from data link layer
+ * @param socket The socket to receive the frame from
+ * @param frame The frame struct that is to be received
+ * @return total_received The number of bytes received, or -1 on error
+ */
 int data_link_recv_frame(int socket, frame_t* frame)
 {
-	printf("%s Receive Frame\n", DATA_LINK_STR);
-
 	frame_t ack_frame;
 	int bytes_received;
 	int total_received;
@@ -103,24 +103,8 @@ int data_link_recv_frame(int socket, frame_t* frame)
 		}
 		total_received += bytes_received;
 	}
-
-	if (frame->frame.ack)
-	{
-		printf("ack frame data recv\n");
-	}
-	else
-	{
-	    printf("frame contents: len = %d\n", frame->frame.data_length);
-	    int i;
-	    for (i = 0; i < frame->frame.data_length; i++) {
-	        printf("%x ", frame->frame.data[i]);
-	    }
-	    printf("\n");
-	}
-
     
 	if (!frame->frame.ack) {
-		printf("sending frame ack\n");
 		ack_frame.frame.ack = true;
 		if (physical_send(socket, ack_frame.buff, sizeof(ack_frame.buff)) != sizeof(ack_frame.buff)) {
 			return -1;
@@ -130,10 +114,15 @@ int data_link_recv_frame(int socket, frame_t* frame)
 	return total_received;
 }
 
+/*
+ * @brief Receive buffer from data link layer in frames
+ * @param socket The socket to receive the frame from
+ * @param buffer The buffer that is to be received
+ * @param len The length of the given buffer
+ * @return bytes_received The number of bytes received, or -1 on error
+ */
 int data_link_recv(int socket, uint8_t* buffer, int len)
 {
-	printf("%s Receive\n", DATA_LINK_STR);
-
 	frame_t frame;
 	int bytes_received;
 

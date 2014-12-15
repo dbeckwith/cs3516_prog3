@@ -10,6 +10,7 @@
 #include "util.h"
 #include "network_layer.h"
 
+#define CLIENT_STR "[PHOTO CLIENT]: "
 #define SENDBUFLEN 256
 
 int main(int argc, char* argv[])
@@ -31,7 +32,7 @@ int main(int argc, char* argv[])
 
 	if ((sock = network_connect(argv[1], SERVER_PORT)) < 0)
 	{
-		exit_with_error(" Connect() failed");
+		exit_with_error("Network_connect() failed");
 	}
 
 	photo_count = atoi(argv[3]);
@@ -40,25 +41,23 @@ int main(int argc, char* argv[])
 	for (photo_num = 0; photo_num < photo_count; photo_num++)
 	{
 		photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
-		printf("%s\n", photo_file_name);
+		printf(CLIENT_STR "%s\n", photo_file_name);
 
-		printf("sending photo length %d\n", photo_file_name_len);
 		memcpy(send_buff, &photo_file_name_len, 4);
 		if (network_send(sock, send_buff, 4) != 4)
 		{
-			exit_with_error("send() sdsent a different number of bytes than expected");
+			exit_with_error("Network_send() sent a different number of bytes than expected for file name length");
 		}
 
-		printf("sending photo name\n");
         // Send photo name
 		if (network_send(sock, photo_file_name, photo_file_name_len) != photo_file_name_len)
 		{
-			exit_with_error("send() sent a different number of bytes than expected");
+			exit_with_error("Network_send() sent a different number of bytes than expected for file name");
 		}
 
         // Send photo to server
         if (network_send_file(sock, photo_file_name) < 0) {
-            exit_with_error("send file");
+            exit_with_error("Network_send_file");
         }
 
 		if (photo_num == photo_count - 1)
@@ -73,12 +72,11 @@ int main(int argc, char* argv[])
 		}
 		if (network_send(sock, send_buff, 1) != 1)
 		{
-			exit_with_error("send() sent a different number of bytes than expected");
+			exit_with_error("Network_send() sent a different number of bytes than expected for command");
 		}
 	}
 
-	printf("Bye.\n");
-
+	printf(CLIENT_STR "Bye.\n");
 	close(sock);
 	exit(0);
 }
