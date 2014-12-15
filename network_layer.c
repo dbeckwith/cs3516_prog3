@@ -49,7 +49,7 @@ int network_send_packet(int socket, packet_t* packet)
  * @param file_name The photo file to open and read
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int network_send_file(int socket, uint8_t* file_name)
+int network_send_file(int socket, char* file_name)
 {
 	unsigned int read_size1;
 	unsigned int read_size2;
@@ -196,7 +196,7 @@ int network_recv_packet(int socket, packet_t* packet)
  * @param file_name The file to output the photo to
  * @return bytes_received The bytes received in packets, or -1 on error
  */
-int network_recv_file(int socket, uint8_t* file_name)
+int network_recv_file(int socket, char* file_name)
 {
 	packet_t packet;
 	FILE* output;

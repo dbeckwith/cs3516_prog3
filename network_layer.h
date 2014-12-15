@@ -22,9 +22,9 @@ typedef union
 
 // Function definitions
 
-int network_send_file(int socket, uint8_t* file_name);
+int network_send_file(int socket, char* file_name);
 int network_send(int socket, uint8_t* buffer, unsigned int len);
-int network_recv_file(int socket, uint8_t* file_name);
+int network_recv_file(int socket, char* file_name);
 int network_recv(int socket, uint8_t* buffer, unsigned int len);
 int network_connect(char* url, unsigned short port);
 int network_listen(unsigned short port, unsigned int max_pending_clients);
