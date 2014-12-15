@@ -78,16 +78,21 @@ void handle_client(int client_socket)
 	int command;
 	int client_id;
 	int photo_id;
+	char log_file_name[RCVBUFSIZE];
+
+	if (recv_message(client_socket, recv_buff, 4) != 4)
+	{
+		exit_with_error("Recv() failed");
+	}
+
+	memcpy(&client_id, recv_buff, 4);
+
+	sprintf(log_file_name, "server_%d.log", client_id);
+	add_photo_log(client_socket, log_file_name);
 
 	command = -1;
 	while (command != DONE_CMD)
 	{
-		if (recv_message(client_socket, recv_buff, 4) != 4)
-		{
-			exit_with_error("Recv() failed");
-		}
-
-		memcpy(&client_id, recv_buff, 4);
 
 		if (recv_message(client_socket, recv_buff, 4) != 4)
 		{
@@ -119,6 +124,7 @@ void handle_client(int client_socket)
 		}
 		command = recv_buff[0];
 	}
+	close_photo_log(client_socket);
 	close(client_socket);
 }
 

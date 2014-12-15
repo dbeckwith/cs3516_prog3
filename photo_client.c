@@ -20,6 +20,7 @@ int main(int argc, char* argv[])
     int photo_count;
     int photo_num;
     int client_id;
+    char log_file_name[MAXFILENAME];
     uint8_t send_buff[SENDBUFSIZE];
 	char photo_file_name[MAXFILENAME];
 	unsigned int photo_file_name_len;
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
 
 	photo_count = atoi(argv[3]);
 	client_id = atoi(argv[2]);
+
+	sprintf(log_file_name, "client_%d.log", client_id);
+	add_photo_log(sock, log_file_name);
 
 	memcpy(send_buff, &client_id, 4);
 	if (network_send(sock, send_buff, 4) != 4)
@@ -84,6 +88,7 @@ int main(int argc, char* argv[])
 	}
 
 	printf(CLIENT_STR "Bye.\n");
+	close_photo_log(sock);
 	close(sock);
 	exit(0);
 }
