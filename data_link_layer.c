@@ -25,11 +25,20 @@ int data_link_send_frame(int socket, frame_t* frame)
 		return bytes_sent;
 	}
 
+    printf("frame contents: len = %d\n", frame->frame.data_length);
+    int i;
+    for (i = 0; i < frame->frame.data_length; i++) {
+        printf("%x ", frame->frame.data[i]);
+    }
+    printf("\n");
+
     printf("receiving frame ack\n");
 	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.buff))
 	{
 		return -1;
 	}
+
+	printf("receiving act frame%d\n", ack_frame.frame.ack);
 
 	if (ack_frame.frame.ack)
 	{
@@ -47,6 +56,7 @@ int data_link_send(int socket, char* buffer, int len)
 	int pos;
 	unsigned int chunk_len;
 	int bytes_sent;
+	bytes_sent = 0;
 
 	chunk_len = FRAME_DATA_SIZE;
 
@@ -58,13 +68,18 @@ int data_link_send(int socket, char* buffer, int len)
 		}
 		memcpy(frame.frame.data, buffer + pos, chunk_len);
 		frame.frame.data_length = chunk_len;
+		frame.frame.ack = false;
+		frame.frame.eof = false;
 
 		if (data_link_send_frame(socket, &frame) != sizeof(frame_t))
 		{
+			printf("datalinksendframe not equal -1\n");
 			return -1;
 		}
+		printf("%d bytes sentincre\n",bytes_sent );
 		bytes_sent += chunk_len;
 	}
+	printf("%dbytes sent%d\n", bytes_sent, len);
 	return bytes_sent;
 }
 
@@ -77,6 +92,10 @@ int data_link_recv_frame(int socket, frame_t* frame)
 	int total_received;
 
 	total_received = 0;
+
+	ack_frame.frame.data_length = 0;
+	ack_frame.frame.eof = false;
+
 	while (total_received < sizeof(frame->buff))
 	{
 		if ((bytes_received = physical_recv(socket, frame->buff + total_received, sizeof(frame->buff) - total_received)) <= 0) {
@@ -85,20 +104,28 @@ int data_link_recv_frame(int socket, frame_t* frame)
 		total_received += bytes_received;
 	}
 
-    printf("sending frame ack\n");
+	if (frame->frame.ack)
+	{
+		printf("ack frame data recv\n");
+	}
+	else
+	{
+	    printf("frame contents: len = %d\n", frame->frame.data_length);
+	    int i;
+	    for (i = 0; i < frame->frame.data_length; i++) {
+	        printf("%x ", frame->frame.data[i]);
+	    }
+	    printf("\n");
+	}
+
+    
 	if (!frame->frame.ack) {
+		printf("sending frame ack\n");
 		ack_frame.frame.ack = true;
 		if (physical_send(socket, ack_frame.buff, sizeof(ack_frame.buff)) != sizeof(ack_frame.buff)) {
 			return -1;
 		}
 	}
-
-    printf("frame contents: len = %d\n", frame->frame.data_length);
-    int i;
-    for (i = 0; i < frame->frame.data_length; i++) {
-        printf("%x ", frame->frame.data[i]);
-    }
-    printf("\n");
 
 	return total_received;
 }

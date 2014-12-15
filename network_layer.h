@@ -3,7 +3,7 @@
 #ifndef NETWORK_LAYER_H
 #define NETWORK_LAYER_H
 
-#define NETWORK_STR "NETWORK LAYER" // String to display for debugging at network layer
+#define NETWORK_STR "[NETWORK LAYER]" // String to display for debugging at network layer
 #define PKT_DATA_SIZE 200
 
 // Union defintion for packet for easy conversion to bytes to pass as frames

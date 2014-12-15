@@ -30,16 +30,25 @@ int network_send_packet(int socket, packet_t* packet)
 		return bytes_sent;
 	}
 
+    printf("packet contents: len = %d\n", packet->packet.data_length);
+    int i;
+    for (i = 0; i < packet->packet.data_length; i++) {
+        printf("%x ", packet->packet.data[i]);
+    }
+    printf("\n");
+
 	printf("receiving packet ack\n");
 	// Check if packet is ACKed successfully
 	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.buff))
 	{
+		printf("networkrecvpacketack -1\n");
 		return -1;
 	}
 
 	// Check if returned ACK is valid ACK packet
 	if (ack_packet.packet.ack)
 	{
+		printf("got ack network send packet\n");
 		return bytes_sent;
 	}
 	return -1;
@@ -67,6 +76,7 @@ int network_send_file(int socket, char* file_name)
 	unsigned int* temp_read_size;
 	FILE* photo;
 	int bytes_sent;
+	bytes_sent = 0;
 	packet_t packet;
 
 	curr_read_buffer = read_buffer1;
@@ -132,6 +142,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 	unsigned int pos;
 	unsigned int chunk_len;
 	int bytes_sent;
+	bytes_sent = 0;
 
 	chunk_len = PKT_DATA_SIZE;
 	for (pos = 0; pos < len; pos += PKT_DATA_SIZE)
@@ -147,6 +158,7 @@ int network_send(int socket, char* buffer, unsigned int len)
 		
 		if (network_send_packet(socket, &packet) != sizeof(packet_t))
 		{
+			printf("networksentpacket -1\n");
 			return -1;
 		}
 		bytes_sent += chunk_len;
@@ -161,8 +173,11 @@ int network_recv_packet(int socket, packet_t* packet)
 	packet_t ack_packet;
 	int bytes_received;
 	int total_received;
-
 	total_received = 0;
+	ack_packet.packet.ack = true;
+	ack_packet.packet.eof = false;
+	ack_packet.packet.data_length = 0;
+
 	while (total_received < sizeof(packet->buff)) {
 		if ((bytes_received = data_link_recv(socket, packet->buff + total_received, sizeof(packet->buff) - total_received)) <= 0) {
 			return -1;
@@ -170,11 +185,22 @@ int network_recv_packet(int socket, packet_t* packet)
 		total_received += bytes_received;
 	}
 
+	if (packet->packet.ack)
+	{
+		printf("ack frame data recv\n");
+	}
+	else
+	{
+	    printf("packet contents: len = %d\n", packet->packet.data_length);
+	    int i;
+	    for (i = 0; i < packet->packet.data_length; i++) {
+	        printf("%x ", packet->packet.data[i]);
+	    }
+	    printf("\n");
+	}
+
 	printf("sending packet ack\n");
 	if (!packet->packet.ack) {
-		ack_packet.packet.ack = true;
-		ack_packet.packet.eof = false;
-		ack_packet.packet.data_length = 0;
 		if (data_link_send(socket, ack_packet.buff, sizeof(ack_packet.buff)) != sizeof(ack_packet.buff)) {
 			return -1;
 		}
@@ -189,6 +215,7 @@ int network_recv_file(int socket, char* file_name) {
 	packet_t packet;
 	FILE* output;
 	int bytes_received;
+	bytes_received = 0;
 
 	if ((output = fopen(file_name, "wb")) == NULL) {
 		return -1;

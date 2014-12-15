@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 		memcpy(send_buff, &photo_file_name_len, 4);
 		if (network_send(sock, send_buff, 4) != 4)
 		{
-			exit_with_error("send() sent a different number of bytes than expected");
+			exit_with_error("send() sdsent a different number of bytes than expected");
 		}
 
 		printf("sending photo name\n");
