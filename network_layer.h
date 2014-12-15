@@ -20,6 +20,8 @@ typedef union
     uint8_t bytes[sizeof(struct packet)];
 } packet_t;
 
+int packet_count;
+
 // Function definitions
 
 int network_send_file(int socket, char* file_name);

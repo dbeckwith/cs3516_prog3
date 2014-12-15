@@ -22,12 +22,14 @@ int network_send_packet(int socket, packet_t* packet)
 {
 	packet_t ack_packet;
 	int bytes_sent;
+	packet_count++;
 
 	// Check if packet is sent successfully
 	if ((bytes_sent = data_link_send(socket, packet->bytes, sizeof(packet->bytes))) != sizeof(packet->bytes))
 	{
 		return bytes_sent;
 	}
+	photo_log(socket, "Packet %d sent successfully\n", packet_count);
 
 	// Check if packet is ACKed successfully
 	if (network_recv_packet(socket, &ack_packet) != sizeof(ack_packet.bytes))
@@ -65,6 +67,8 @@ int network_send_file(int socket, char* file_name)
 	int bytes_sent;
 	bytes_sent = 0;
 	packet_t packet;
+
+	packet_count = 0;
 
 	curr_read_buffer = read_buffer1;
 	curr_read_size = &read_size1;
@@ -132,6 +136,8 @@ int network_send(int socket, uint8_t* buffer, unsigned int buffer_size)
 	unsigned int chunk_len;
 	int bytes_sent;
 	bytes_sent = 0;
+
+	packet_count = 0;
 
 	chunk_len = PKT_DATA_SIZE;
 	for (pos = 0; pos < buffer_size; pos += PKT_DATA_SIZE)

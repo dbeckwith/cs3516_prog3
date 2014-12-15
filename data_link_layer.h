@@ -21,6 +21,8 @@ typedef union
     uint8_t bytes[sizeof(struct frame)];
 } frame_t;
 
+int frame_count;
+
 // Function definitions
 
 int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size);

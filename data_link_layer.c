@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "util.h"
+#include "network_layer.h"
 #include "data_link_layer.h"
 #include "physical_layer.h"
 
@@ -21,6 +22,7 @@ int data_link_send_frame(int socket, frame_t* frame)
 {
 	frame_t ack_frame;	
 	int bytes_sent;
+	frame_count++;
 
     frame->frame.ack = false;
 
@@ -28,6 +30,7 @@ int data_link_send_frame(int socket, frame_t* frame)
 	{
 		return bytes_sent;
 	}
+	photo_log(socket, "Frame %d of packet %d was sent successfully.\n", frame_count, packet_count);
 
 	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.bytes))
 	{
@@ -56,6 +59,8 @@ int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size)
 	unsigned int chunk_len;
 	int bytes_sent;
 	bytes_sent = 0;
+
+	frame_count = 0;
 
 	chunk_len = FRAME_DATA_SIZE;
 

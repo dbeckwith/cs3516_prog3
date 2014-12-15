@@ -74,6 +74,7 @@ int photo_log(int socket, const char* format, ...) {
             va_start(argptr, format);
             vfprintf(curr_entry->log_file, format, argptr);
             va_end(argptr);
+            fflush(curr_entry->log_file);
             return 0;
         }
     }
