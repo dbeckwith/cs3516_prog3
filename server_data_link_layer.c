@@ -7,43 +7,8 @@
 #include "util.h"
 #include "network_layer.h"
 #include "data_link_layer.h"
+#include "server_data_link_layer.h"
 #include "physical_layer.h"
-
-int data_link_send_frame(int socket, frame_t* frame);
-int data_link_recv_frame(int socket, frame_t* frame);
-
-/*
- * @brief Send frame to physical layer
- * @param socket The socket to send the frame to
- * @param frame The frame struct that is to be sent
- * @return bytes_sent The number of bytes sent, or -1 on error
- */
-int data_link_send_frame(int socket, frame_t* frame)
-{
-	frame_t ack_frame;	
-	int bytes_sent;
-	frame_count++;
-
-    frame->frame.ack = false;
-
-	if ((bytes_sent = physical_send(socket, frame->bytes, sizeof(frame->bytes))) != sizeof(frame->bytes))
-	{
-		return bytes_sent;
-	}
-	photo_log(socket, "Frame %d of packet %d was sent successfully.\n", frame_count, packet_count);
-
-	if (data_link_recv_frame(socket, &ack_frame) != sizeof(ack_frame.bytes))
-	{
-		return -1;
-	}
-
-	if (ack_frame.frame.ack)
-	{
-		return bytes_sent;
-	}
-
-	return -1;
-}
 
 /*
  * @brief Send buffer to data link layer in frames
@@ -52,36 +17,19 @@ int data_link_send_frame(int socket, frame_t* frame)
  * @param buffer_size The length of the given buffer
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size)
+int data_link_send_ack_packet(int socket)
 {
 	frame_t frame;
-	unsigned int pos;
-	unsigned int chunk_len;
-	int bytes_sent;
-	bytes_sent = 0;
+	frame.frame.ack = true;
+	frame.frame.eof = false;
+	frame.frame.data_length = 0;
 
-	frame_count = 0;
-
-	chunk_len = FRAME_DATA_SIZE;
-
-	for (pos = 0; pos < buffer_size; pos += FRAME_DATA_SIZE)
+	if (physical_send_frame(socket, &frame) != sizeof(frame_t))
 	{
-		if (pos + FRAME_DATA_SIZE >= buffer_size)
-		{
-			chunk_len = buffer_size - pos;
-		}
-		memcpy(frame.frame.data, buffer + pos, chunk_len);
-		frame.frame.data_length = chunk_len;
-		frame.frame.ack = false;
-		frame.frame.eof = false;
-
-		if (data_link_send_frame(socket, &frame) != sizeof(frame_t))
-		{
-			return -1;
-		}
-		bytes_sent += chunk_len;
+		return -1;
 	}
-	return bytes_sent;
+
+	return 0;
 }
 
 /*
@@ -90,51 +38,36 @@ int data_link_send(int socket, uint8_t* buffer, unsigned int buffer_size)
  * @param frame The frame struct that is to be received
  * @return total_received The number of bytes received, or -1 on error
  */
-int data_link_recv_frame(int socket, frame_t* frame)
+int data_link_recv_packet(int socket, packet_t* packet)
 {
-	frame_t ack_frame;
-	int bytes_received;
-	int total_received;
-
-	total_received = 0;
-
-	ack_frame.frame.data_length = 0;
-	ack_frame.frame.eof = false;
-
-	while (total_received < sizeof(frame->bytes))
-	{
-		if ((bytes_received = physical_recv(socket, frame->bytes + total_received, sizeof(frame->bytes) - total_received)) <= 0) {
-			return -1;
-		}
-		total_received += bytes_received;
-	}
-    
-	if (!frame->frame.ack) {
-		ack_frame.frame.ack = true;
-		if (physical_send(socket, ack_frame.bytes, sizeof(ack_frame.bytes)) != sizeof(ack_frame.bytes)) {
-			return -1;
-		}
-	}
-
-	return total_received;
-}
-
-/*
- * @brief Receive buffer from data link layer in frames
- * @param socket The socket to receive the frame from
- * @param buffer The buffer that is to be received
- * @param buffer_size The length of the given buffer
- * @return bytes_received The number of bytes received, or -1 on error
- */
-int data_link_recv(int socket, uint8_t* buffer, unsigned int buffer_size)
-{
+	int pos;
+	unsigned int chunk_len;
+	size_t packet_size;
 	frame_t frame;
-	int bytes_received;
 
-	if (data_link_recv_frame(socket, &frame) != sizeof(frame_t)) {
-		return -1;
+	packet_size = sizeof(packet_t);
+
+	for (pos = 0; pos < packet_size; pos += chunk_len)
+	{
+		if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
+		{
+			return -1;
+		}
+		chunk_len = frame.frame.data_length;
+		if (pos + chunk_len > packet_size)
+		{
+			return -1;
+		}
+		memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
+
+		frame.frame.ack = true;
+		frame.frame.eof = false;
+		frame.frame.data_length = 0;
+
+		if (physical_send_frame(socket, &frame) != sizeof(frame_t))
+		{
+			return -1;
+		}
 	}
-	bytes_received = frame.frame.data_length;
-	memcpy(buffer, frame.frame.data, bytes_received > buffer_size? buffer_size : bytes_received);
-	return bytes_received;
+	return sizeof(packet_t);
 }
