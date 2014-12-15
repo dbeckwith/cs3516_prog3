@@ -48,7 +48,7 @@ int data_link_send_frame(int socket, frame_t* frame)
 	return -1;
 }
 
-int data_link_send(int socket, char* buffer, int len)
+int data_link_send(int socket, uint8_t* buffer, int len)
 {
 	printf("%s Send\n", DATA_LINK_STR);
 
@@ -130,7 +130,7 @@ int data_link_recv_frame(int socket, frame_t* frame)
 	return total_received;
 }
 
-int data_link_recv(int socket, char* buffer, int len)
+int data_link_recv(int socket, uint8_t* buffer, int len)
 {
 	printf("%s Receive\n", DATA_LINK_STR);
 

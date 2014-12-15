@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -78,7 +79,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
  * @param buffer_size The size of the buffer to send
  * @return Result of send()
  */
-int physical_send(int socket, char* buffer, int buffer_size)
+int physical_send(int socket, uint8_t* buffer, int buffer_size)
 {
     printf("%s Send\n", PHYSICAL_STR);
     return send(socket, buffer, buffer_size, 0);
@@ -91,7 +92,7 @@ int physical_send(int socket, char* buffer, int buffer_size)
  * @param buffer_size The size of the buffer to receive into
  * @return Result of recv()
  */
-int physical_recv(int socket, char* buffer, int buffer_size)
+int physical_recv(int socket, uint8_t* buffer, int buffer_size)
 {
     printf("%s Receive\n", PHYSICAL_STR);
     return recv(socket, buffer, buffer_size, 0);

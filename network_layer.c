@@ -60,19 +60,19 @@ int network_send_packet(int socket, packet_t* packet)
  * @param file_name The photo file to open and read
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int network_send_file(int socket, char* file_name)
+int network_send_file(int socket, uint8_t* file_name)
 {
 	printf("%s Send File\n", NETWORK_STR);
 
 	unsigned int read_size1;
 	unsigned int read_size2;
-	char read_buffer1[PKT_DATA_SIZE];
-	char read_buffer2[PKT_DATA_SIZE];
-	char* curr_read_buffer;
+	uint8_t read_buffer1[PKT_DATA_SIZE];
+	uint8_t read_buffer2[PKT_DATA_SIZE];
+	uint8_t* curr_read_buffer;
 	unsigned int* curr_read_size;
-	char* prev_read_buffer;
+	uint8_t* prev_read_buffer;
 	unsigned int* prev_read_size;
-	char* temp_read_buffer;
+	uint8_t* temp_read_buffer;
 	unsigned int* temp_read_size;
 	FILE* photo;
 	int bytes_sent;
@@ -113,6 +113,10 @@ int network_send_file(int socket, char* file_name)
 
 			if (packet.packet.eof)
 			{
+				if (fclose(photo) < 0)
+				{
+					return -1;
+				}
 				return bytes_sent;
 			}
 		}
@@ -134,7 +138,7 @@ int network_send_file(int socket, char* file_name)
  * @param len The length of given buffer
  * @return bytes_sent The number of bytes sent, or -1 on error
  */
-int network_send(int socket, char* buffer, unsigned int len)
+int network_send(int socket, uint8_t* buffer, unsigned int len)
 {
 	printf("%s Send\n", NETWORK_STR);
 
@@ -209,7 +213,7 @@ int network_recv_packet(int socket, packet_t* packet)
 	return total_received;
 }
 
-int network_recv_file(int socket, char* file_name) {
+int network_recv_file(int socket, uint8_t* file_name) {
 	printf("%s Receive File\n", NETWORK_STR);
 
 	packet_t packet;
@@ -231,10 +235,14 @@ int network_recv_file(int socket, char* file_name) {
 			return bytes_received;
 		}
 	}
+	if (fclose(output) < 0)
+	{
+		return -1;
+	}
 	return bytes_received;
 }
 
-int network_recv(int socket, char* buffer, unsigned int len) {
+int network_recv(int socket, uint8_t* buffer, unsigned int len) {
 	printf("%s Receive\n", NETWORK_STR);
 
 	packet_t packet;

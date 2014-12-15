@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <stdint.h>
 #include <netdb.h>
 #include "photo.h"
 #include "util.h"
@@ -17,7 +18,7 @@ int main(int argc, char* argv[])
     int photo_count;
     int photo_num;
     int client_id;
-    char send_buff[SENDBUFLEN];
+    uint8_t send_buff[SENDBUFLEN];
 	char photo_file_name[1000];
 	unsigned int photo_file_name_len;
 

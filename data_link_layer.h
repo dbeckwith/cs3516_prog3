@@ -1,3 +1,4 @@
+#include <stdint.h>
 
 #ifndef DATA_LINK_LAYER_H
 #define DATA_LINK_LAYER_H
@@ -10,19 +11,19 @@ typedef union
 {
     struct frame
     {
-    	char ack;
-    	char seq_num[2];
-    	char data[FRAME_DATA_SIZE];
-    	char data_length;
-    	char eof;
-    	char error_detect[2];
+    	uint8_t ack;
+    	uint8_t seq_num[2];
+    	uint8_t data[FRAME_DATA_SIZE];
+    	uint8_t data_length;
+    	uint8_t eof;
+    	uint8_t error_detect[2];
     } frame;
-    char buff[sizeof(struct frame)];
+    uint8_t buff[sizeof(struct frame)];
 } frame_t;
 
 // Function definitions
 
-int data_link_send(int socket, char* buffer, int len);
-int data_link_recv(int socket, char* buffer, int len);
+int data_link_send(int socket, uint8_t* buffer, int len);
+int data_link_recv(int socket, uint8_t* buffer, int len);
 
 #endif

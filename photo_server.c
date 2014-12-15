@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
  */
 void handle_client(int client_socket)
 {
-	char recv_buff[RCVBUFSIZE];
+	uint8_t recv_buff[RCVBUFSIZE];
 	unsigned int photo_file_len;
 	char* photo_file_name; //  Buffer for output photo file name
 	int command;
