@@ -10,6 +10,7 @@
 #define CLIENT_LOG_FILE "client.log"
 
 // Function definitions
+
 void exit_with_error(char* error);
 
 int add_photo_log(int socket, char* file_name);

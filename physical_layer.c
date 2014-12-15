@@ -6,7 +6,14 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "util.h"
+#include "photo.h"
 #include "physical_layer.h"
+
+void set_phys_timeout()
+{
+    PHYS_TIMEOUT.tv_sec = 1;
+    PHYS_TIMEOUT.tv_usec = 0;
+}
 
 /*
  * @brief Converts hostname and port number to IP address and connects socket
@@ -67,6 +74,9 @@ int physical_connect(char *serverName, unsigned short serverPort)
 
     printf(PHYSICAL_STR "Connected to server at %s\n", inet_ntoa(((struct sockaddr_in *)serverAddr)->sin_addr));
 
+    set_phys_timeout();
+
+    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &PHYS_TIMEOUT, sizeof(struct timeval));
     return serverSocket;
 
 }
