@@ -103,7 +103,17 @@ int physical_send_frame(int socket, frame_t* frame)
  */
 int physical_recv_frame(int socket, frame_t* frame)
 {
-    return recv(socket, frame->bytes, sizeof(frame_t), 0);
+    int bytes_received;
+    int total_received;
+
+    while (total_received < sizeof(frame_t)) {
+        if ((bytes_received = recv(socket, frame->bytes + total_received, sizeof(frame_t) - total_received), 0) <= 0) {
+            return -1;
+        }
+        total_received += bytes_received;
+    }
+
+    return total_received;
 }
 
 /*
