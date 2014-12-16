@@ -4,6 +4,8 @@
 #ifndef CLIENT_NETWORK_LAYER_H
 #define CLIENT_NETWORK_LAYER_H
 
+int packet_count;
+
 // Function definitions
 
 int network_send_file(int socket, char* file_name);

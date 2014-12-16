@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    if (DEBUG) printf(CLIENT_STR "Bye.\n");
+    printf(CLIENT_STR "Bye.\n");
     close_photo_log(sock);
     close(sock);
     exit(0);

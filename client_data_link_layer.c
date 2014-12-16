@@ -26,6 +26,7 @@ int data_link_send_packet(int socket, packet_t* packet)
     unsigned int chunk_len;
 
     packet_size = sizeof(packet_t);
+    frame_count = 0;
 
     chunk_len = FRAME_DATA_SIZE;
 
@@ -48,6 +49,8 @@ int data_link_send_packet(int socket, packet_t* packet)
         {
             return -1;
         }
+
+        photo_log(socket, "Frame %d of packet %d sent successfully.\n", ++frame_count, packet_count);
 
         // wait for ACK frame
         if (DEBUG) printf(DATA_LINK_STR "waiting for frame ack through physical layer\n");
@@ -77,6 +80,7 @@ int data_link_recv_ack_packet(int socket)
     if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
         return -1;
     }
+    photo_log(socket, "ACK packet frame %d received successfully.\n", packet_count);
     if (!frame.frame.ack) {
         return -1;
     }

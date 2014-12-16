@@ -34,6 +34,8 @@ int network_send_file(int socket, char* file_name)
     bytes_sent = 0;
     packet_t packet;
 
+    packet_count = 0;
+
     curr_read_buffer = read_buffer1;
     curr_read_size = &read_size1;
     prev_read_buffer = read_buffer2;
@@ -60,11 +62,14 @@ int network_send_file(int socket, char* file_name)
             packet.packet.data_length = *prev_read_size;
             packet.packet.ack = false;
 
+            packet_count++;
             // send packet through data link layer
             if (data_link_send_packet(socket, &packet) != sizeof(packet_t))
             {
                 return -1;
             }
+
+            photo_log(socket, "Packet %d sent successfully.\n", packet_count);
 
             bytes_sent += *prev_read_size;
 
@@ -72,6 +77,8 @@ int network_send_file(int socket, char* file_name)
             if (data_link_recv_ack_packet(socket) != 0) {
                 return -1;
             }
+
+            photo_log(socket, "Packet %d ACKed successfully.\n", packet_count);
 
             if (packet.packet.eof)
             {
@@ -106,6 +113,8 @@ int network_send(int socket, uint8_t* data, size_t data_size)
     unsigned int pos;
     unsigned int chunk_len;
 
+    packet_count = 0;
+
     chunk_len = PKT_DATA_SIZE;
     for (pos = 0; pos < data_size; pos += PKT_DATA_SIZE)
     {
@@ -119,6 +128,8 @@ int network_send(int socket, uint8_t* data, size_t data_size)
         packet.packet.eof = false;
         packet.packet.ack = false;
         
+        packet_count++;
+
         // send packet through data link layer
         if (DEBUG) printf(NETWORK_STR "sending packet through data link layer\n");
         if (data_link_send_packet(socket, &packet) != sizeof(packet_t))
@@ -126,11 +137,14 @@ int network_send(int socket, uint8_t* data, size_t data_size)
             return -1;
         }
 
+        photo_log(socket, "Packet %d sent successfully.\n", packet_count);
+
         // wait for an ACK that this packet got sent
         if (DEBUG) printf(NETWORK_STR "waiting for packet ack through data link layer\n");
         if (data_link_recv_ack_packet(socket) != 0) {
             return -1;
         }
+        photo_log(socket, "Packet %d ACKed successfully.\n", packet_count);
     }
     return data_size;
 }
