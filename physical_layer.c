@@ -89,6 +89,9 @@ int physical_send_frame(int socket, frame_t* frame)
 }
 
 /*
+ * @brief This function is used to handle the timers on receive. Referenced from: http://developerweb.net/viewtopic.php?id=2933. See readme for more information on resources.
+ */
+/*
    Params:
       fd       -  (int) socket file descriptor
       buffer - (char*) buffer to hold data
@@ -116,21 +119,29 @@ int recv_to(int fd, char *buffer, int len, int flags, int to) {
     // Initialize time out struct
     tv.tv_sec = 0;
     tv.tv_usec = to * 1000;
-    // select()
+    
+    // Select()
     result = select(fd+1, &readset, NULL, NULL, &tv);
 
     // Check status
     if (result < 0)
+    {
         return -1;
-    else if (result > 0 && FD_ISSET(fd, &readset)) {
+    }
+    else if (result > 0 && FD_ISSET(fd, &readset))
+    {
         // Set non-blocking mode
         if ((iof = fcntl(fd, F_GETFL, 0)) != -1)
+        {
             fcntl(fd, F_SETFL, iof | O_NONBLOCK);
+        }
         // receive
         result = recv(fd, buffer, len, flags);
         // set as before
         if (iof != -1)
+        {
             fcntl(fd, F_SETFL, iof);
+        }
         return result;
     }
     return -2;
@@ -139,9 +150,9 @@ int recv_to(int fd, char *buffer, int len, int flags, int to) {
 /*
  * @brief Receive given buffer from given socket
  * @param socket The socket to receive from
- * @param buffer The buffer to receive into
- * @param buffer_size The size of the buffer to receive into
- * @return Result of recv()
+ * @param frame The frame to receive into
+ * @param timeout Defines whether to call timeout recv or normal recv
+ * @return chunk_size on error, frame_size on success
  */
 int physical_recv_frame(int socket, frame_t* frame, bool timeout)
 {
@@ -151,22 +162,27 @@ int physical_recv_frame(int socket, frame_t* frame, bool timeout)
 
     frame_size = sizeof(frame_t);
 
-    for (pos = 0; pos < frame_size; pos += chunk_size) {
-        DEBUG(PHYSICAL_STR "receiving frame segment from actual network layer\n");
-        if (timeout) {
-            if ((chunk_size = recv_to(socket, frame->bytes + pos, frame_size - pos, 0, TIMEOUT)) <= 0) {
-                DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
+    for (pos = 0; pos < frame_size; pos += chunk_size)
+    {
+        DEBUG(PHYSICAL_STR "Receiving frame segment from actual network layer\n");
+        if (timeout)
+        {
+            if ((chunk_size = recv_to(socket, frame->bytes + pos, frame_size - pos, 0, TIMEOUT)) <= 0)
+            {
+                DEBUG(PHYSICAL_STR "Actual receive failed: %d\n", chunk_size);
                 return chunk_size;
             }
         }
-        else {
-            if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0) {
-                DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
+        else
+        {
+            if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0)
+            {
+                DEBUG(PHYSICAL_STR "Actual receive failed: %d\n", chunk_size);
                 return chunk_size;
             }
         }
     }
-    DEBUG(PHYSICAL_STR "done receiving frame from actual network layer\n");
+    DEBUG(PHYSICAL_STR "Done receiving frame from actual network layer\n");
 
     return frame_size;
 }

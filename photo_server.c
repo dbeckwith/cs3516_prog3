@@ -27,6 +27,9 @@ void *server_thread(void *arg)
     handle_client((long) arg);
 }
 
+/*
+ * @brief Main server function. Creates threads when accepting new connections
+ */
 int main(int argc, char *argv[])
 {
     int serv_socket; //                      Server socket

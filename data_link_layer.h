@@ -6,8 +6,10 @@
 #define DATA_LINK_STR "[DATA LINK LAYER]: " // String to display for debugging at data link layer
 #define FRAME_DATA_SIZE 124
 
+// Sequence number definitions
 #define SEQ_LEN 2
 #define INC_SEQ(seq) ((seq) = ((seq) + 1) % SEQ_LEN)
+
 typedef uint16_t seq_t;
 
 // Union definition for frame for easy conversion to bytes to send
@@ -24,6 +26,7 @@ typedef union
     uint8_t bytes[sizeof(struct frame)];
 } frame_t;
 
+// Function definitions
 uint16_t gen_chksum(frame_t* frame);
 
 #endif

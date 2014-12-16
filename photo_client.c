@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
         exit(1);
     }
 
+    // Connect at physical layer
     if ((sock = physical_connect(argv[1], SERVER_PORT)) < 0)
     {
         exit_with_error("Connect failed");
@@ -49,13 +50,14 @@ int main(int argc, char* argv[])
     sprintf(log_file_name, "client_%d.log", client_id);
     add_photo_log(sock, log_file_name);
 
+    // Send the client id to the server
     memcpy(send_buff, &client_id, sizeof(client_id));
     if (network_send(sock, send_buff, sizeof(client_id)) != sizeof(client_id))
     {
         exit_with_error("Send sent a different number of bytes than expected for client id");
     }
 
-    gettimeofday(&time_before, NULL);
+    gettimeofday(&time_before, NULL); // Performance testing of client
 
     for (photo_num = 0; photo_num < photo_count; photo_num++)
     {
@@ -100,9 +102,10 @@ int main(int argc, char* argv[])
 
     gettimeofday(&time_after, NULL);
 
+    // Performance metrics
     photo_log(sock, "Client execution time: %dms\n", ((time_after.tv_sec * 1000000 + time_after.tv_usec) - (time_before.tv_sec * 1000000 + time_before.tv_usec)) / 1000);
     data_link_log_totals(sock);
-
+    
     printf(CLIENT_STR "Done.\n");
     close_photo_log(sock);
     close(sock);

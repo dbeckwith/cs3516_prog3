@@ -10,7 +10,6 @@
 #include "data_link_layer.h"
 #include "physical_layer.h"
 
-
 /*
  * @brief Send packets from reading chunks of the given photo file
  * @param socket The socket to send the packet to
@@ -19,6 +18,7 @@
  */
 int network_send_file(int socket, char* file_name)
 {
+    // These variables are used to keep track of the current and previous buffers to check for EOF on packets
     unsigned int read_size1;
     unsigned int read_size2;
     uint8_t read_buffer1[PKT_DATA_SIZE];
@@ -56,13 +56,13 @@ int network_send_file(int socket, char* file_name)
     {
         if (*prev_read_size != -1)
         {
-            // copy file data into packet
+            // Copy file data into packet
             packet.packet.eof = *curr_read_size == 0;
             memcpy(packet.packet.data, prev_read_buffer, *prev_read_size);
             packet.packet.data_length = *prev_read_size;
 
             packet_count++;
-            // send packet through data link layer
+            // Send packet through data link layer
             if (data_link_send_packet(socket, &packet) != sizeof(packet_t))
             {
                 return -1;
@@ -72,13 +72,14 @@ int network_send_file(int socket, char* file_name)
 
             bytes_sent += *prev_read_size;
 
-            // wait for an ACK that this packet got sent
+            // Wait for an ACK that this packet got sent
             if (data_link_recv_ack_packet(socket) != 0) {
                 return -1;
             }
 
             photo_log(socket, "Packet %d ACKed successfully.\n", packet_count);
 
+            // If EOF is valid
             if (packet.packet.eof)
             {
                 if (fclose(photo) < 0)
@@ -102,9 +103,9 @@ int network_send_file(int socket, char* file_name)
 /*
  * @brief Send a buffer of some length to the socket
  * @param socket The socket to send the packet to
- * @param buffer The buffer to be sent
- * @param buffer_size The length of given buffer
- * @return bytes_sent The number of bytes sent, or -1 on error
+ * @param data The buffer to be sent
+ * @param data_size The length of given buffer
+ * @return data_size The number of bytes sent, or -1 on error
  */
 int network_send(int socket, uint8_t* data, size_t data_size)
 {
@@ -121,14 +122,14 @@ int network_send(int socket, uint8_t* data, size_t data_size)
         {
             chunk_len = data_size - pos;
         }
-        // copy data into packet
+        // Copy data into packet
         memcpy(packet.packet.data, data + pos, chunk_len);
         packet.packet.data_length = chunk_len;
         packet.packet.eof = false;
         
         packet_count++;
 
-        // send packet through data link layer
+        // Send packet through data link layer
         DEBUG(NETWORK_STR "sending packet through data link layer\n");
         if (data_link_send_packet(socket, &packet) != sizeof(packet_t))
         {
@@ -137,7 +138,7 @@ int network_send(int socket, uint8_t* data, size_t data_size)
 
         photo_log(socket, "Packet %d sent successfully.\n", packet_count);
 
-        // wait for an ACK that this packet got sent
+        // wWit for an ACK that this packet got sent
         DEBUG(NETWORK_STR "waiting for packet ack through data link layer\n");
         if (data_link_recv_ack_packet(socket) != 0) {
             return -1;

@@ -59,11 +59,11 @@ int network_recv_file(int socket, char* file_name)
 }
 
 /*
- * @brief Receive a buffer of some length from the socket
+ * @brief Receive a data buffer of some length from the socket
  * @param socket The socket to receive the packet from
- * @param buffer The buffer to be filled
- * @param buffer_size The length of given buffer
- * @return bytes_received The number of bytes received, or -1 on error
+ * @param data The data to be filled
+ * @param data_size The length of given data
+ * @return data_size The number of bytes received, or -1 on error
  */
 int network_recv(int socket, uint8_t* data, size_t data_size)
 {

@@ -19,11 +19,10 @@ static int good_acks = 0;
 static int bad_acks = 0;
 
 /*
- * @brief Send buffer to data link layer in frames
+ * @brief Send packet to data link layer in frames
  * @param socket The socket to send the frames to
- * @param buffer The buffer that is to be sent
- * @param buffer_size The length of the given buffer
- * @return bytes_sent The number of bytes sent, or -1 on error
+ * @param packet The packet that is to be sent
+ * @return The size of the packet sent, or -1 on error
  */
 int data_link_send_packet(int socket, packet_t* packet)
 {
@@ -42,25 +41,26 @@ int data_link_send_packet(int socket, packet_t* packet)
     chunk_len = FRAME_DATA_SIZE;
     last_frame = false;
 
-    // split packet into individual frames to send to server
+    // Split packet into individual frames to send to server
     for (pos = 0; pos < packet_size; pos += FRAME_DATA_SIZE)
     {
         if (pos + FRAME_DATA_SIZE >= packet_size)
         {
-            // chunk length is just to end of packet
+            // Chunk length is just to end of packet
             chunk_len = packet_size - pos;
             last_frame = true;
         }
         first_run = true;
-        while (true) {
-            // copy packet bytes into frame data
+        while (true)
+        {
+            // Copy packet bytes into frame data
             memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
             frame.frame.data_length = chunk_len;
             frame.frame.seq_num = curr_seq_num;
             frame.frame.eof = last_frame;
             frame.frame.chksum = gen_chksum(&frame);
 
-	        // send frame through physical layer
+	        // Send frame through physical layer
 	        DEBUG(DATA_LINK_STR "sending frame through physical layer\n");
             if (!first_run)
             {
@@ -68,6 +68,8 @@ int data_link_send_packet(int socket, packet_t* packet)
                 frame_retransmissions++;
             }
             first_run = false;
+
+            // Incomplete physical send. Bad error
 	        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
 	        {
 	            return -1;
@@ -77,33 +79,40 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        photo_log(socket, "Frame %d of packet %d sent successfully.\n", frame_count, packet_count);
             frames_sent++;
 
-	        // wait for ACK frame
+	        // Wait for ACK frame
 	        DEBUG(DATA_LINK_STR "waiting for frame ack through physical layer\n");
-	        if ((recv_err = physical_recv_frame(socket, &frame, true)) != sizeof(frame_t)) {
+	        if ((recv_err = physical_recv_frame(socket, &frame, true)) != sizeof(frame_t))
+            {
 	            DEBUG(DATA_LINK_STR "error receiving frame ack\n");
-	            if (recv_err == ERR_TIMEOUT) {
+                // Timer times out
+	            if (recv_err == ERR_TIMEOUT)
+                {
 	            	DEBUG(DATA_LINK_STR "timeout waiting for ack frame\n");
                     photo_log(socket, "Frame %d ACK timed out\n", frame_count);
-	            	// timeout
 	            	continue;
 	            }
 	            return -1;
 	        }
 
-            if (frame.frame.chksum != gen_chksum(&frame)) {
+            // Check sum error
+            if (frame.frame.chksum != gen_chksum(&frame))
+            {
                 DEBUG(DATA_LINK_STR "frame ack checksum failed\n");
                 photo_log(socket, "Frame %d ACK checksum failed\n", frame_count);
                 bad_acks++;
                 continue;
             }
 
-	        if (!IS_ACK_FRAME(frame.frame)) {
+            // Invalid ACK frame
+	        if (!IS_ACK_FRAME(frame.frame))
+            {
 	            DEBUG(DATA_LINK_STR "frame ack was not an ack\n");
 	            return -1;
 	        }
 
-	        // check ACK's seq num
-	        if (frame.frame.seq_num != curr_seq_num) {
+	        // Check ACK's seq num
+	        if (frame.frame.seq_num != curr_seq_num)
+            {
             	DEBUG(DATA_LINK_STR "ack frame was wrong sequence number\n");
                 photo_log(socket, "Frame %d ACK sequence error\n", frame_count);
                 bad_acks++;
@@ -116,7 +125,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        break;
 	    }
 
-        INC_SEQ(curr_seq_num);
+        INC_SEQ(curr_seq_num); // Increment sequence number
     }
     return sizeof(packet_t);
 }
@@ -124,9 +133,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 /*
  * @brief Receive buffer from data link layer in frames
  * @param socket The socket to receive the frame from
- * @param buffer The buffer that is to be received
- * @param buffer_size The length of the given buffer
- * @return bytes_received The number of bytes received, or -1 on error
+ * @return 0 on success, -1 on error
  */
 int data_link_recv_ack_packet(int socket)
 {
@@ -142,6 +149,9 @@ int data_link_recv_ack_packet(int socket)
     return 0;
 }
 
+/*
+ * @brief Log frame performance totals to log file
+ */
 void data_link_log_totals(int socket)
 {
     photo_log(socket, "Frame retransmissions: %d, Frames sent: %d, Good ACKs: %d, Bad ACKs: %d\n", frame_retransmissions, frames_sent, good_acks, bad_acks);

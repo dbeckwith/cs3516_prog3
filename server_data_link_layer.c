@@ -14,9 +14,7 @@
 /*
  * @brief Send buffer to data link layer in frames
  * @param socket The socket to send the frames to
- * @param buffer The buffer that is to be sent
- * @param buffer_size The length of the given buffer
- * @return bytes_sent The number of bytes sent, or -1 on error
+ * @return 0 on success, or -1 on error
  */
 int data_link_send_ack_packet(int socket)
 {
@@ -35,8 +33,8 @@ int data_link_send_ack_packet(int socket)
 /*
  * @brief Receive frame from data link layer
  * @param socket The socket to receive the frame from
- * @param frame The frame struct that is to be received
- * @return total_received The number of bytes received, or -1 on error
+ * @param packet The frame struct that is to be received
+ * @return The number of bytes received, or -1 on error
  */
 int data_link_recv_packet(int socket, packet_t* packet)
 {
@@ -53,6 +51,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
     {
     	while (true) {
             DEBUG(DATA_LINK_STR "Receiving physical frame\n");
+            // Receive frame
 	        if (physical_recv_frame(socket, &frame, false) != sizeof(frame_t))
 	        {
                 DEBUG(DATA_LINK_STR "Error receiving data frame\n");
@@ -60,12 +59,14 @@ int data_link_recv_packet(int socket, packet_t* packet)
 	        }
 
             DEBUG(DATA_LINK_STR "Checking checksum\n");
+            // Check checksum
             if (frame.frame.chksum != gen_chksum(&frame)) {
                 photo_log(socket, "Frame checksum error detected.\n");
                 continue;
             }
 
             DEBUG(DATA_LINK_STR "Checking seq num\n");
+            // Check sequence number
 	        if (frame.frame.seq_num != curr_seq_num) {
                 DEBUG(DATA_LINK_STR "Frame sequence number error detected\n");
                 photo_log(socket, "Frame sequence number error detected.\n");
@@ -77,11 +78,12 @@ int data_link_recv_packet(int socket, packet_t* packet)
                     DEBUG(DATA_LINK_STR "Duplicate frame detected\n");
                     photo_log(socket, "Duplicate frame detected.\n");
 
-                    // send duplicate ACK
+                    // Send duplicate ACK
                     frame.frame.data_length = 0;
-                    // same seq number as just received frame, the duplicate
+                    // Same seq number as just received frame, the duplicate
                     frame.frame.chksum = gen_chksum(&frame);
 
+                    // Resend ACK frame
                     if (physical_send_frame(socket, &frame) != sizeof(frame_t))
                     {
                         DEBUG(DATA_LINK_STR "Error resending ACK frame\n");
@@ -111,6 +113,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
         frame.frame.seq_num = curr_seq_num;
         frame.frame.chksum = gen_chksum(&frame);
 
+        // Send ACK frame
         if (physical_send_frame(socket, &frame) != sizeof(frame_t))
         {
             DEBUG(DATA_LINK_STR "Error sending ACK frame\n");
@@ -120,6 +123,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
 
         INC_SEQ(curr_seq_num);
         
+        // Check for EOF
         if (frame.frame.eof) {
             break;
         }
