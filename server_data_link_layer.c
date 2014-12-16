@@ -44,15 +44,23 @@ int data_link_recv_packet(int socket, packet_t* packet)
     unsigned int chunk_len;
     size_t packet_size;
     frame_t frame;
+    static seq_t curr_seq_num = 0;
 
     packet_size = sizeof(packet_t);
 
     for (pos = 0; pos < packet_size; pos += chunk_len)
     {
-        if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
-        {
-            return -1;
-        }
+    	while (true) {
+	        if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
+	        {
+	            return -1;
+	        }
+	        if (frame.frame.seq_num != curr_seq_num) {
+	        	continue;
+	        }
+	        break;
+	    }
+
         photo_log(socket, "Frame received successfully.\n");
 
         chunk_len = frame.frame.data_length;
@@ -63,12 +71,15 @@ int data_link_recv_packet(int socket, packet_t* packet)
         memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
 
         frame.frame.data_length = 0;
+        memcpy(&frame.frame.seq_num, &curr_seq_num, sizeof(curr_seq_num));
 
         if (physical_send_frame(socket, &frame) != sizeof(frame_t))
         {
             return -1;
         }
         photo_log(socket, "ACK frame sent successfully.\n");
+
+        INC_SEQ(curr_seq_num);
     }
 
     photo_log(socket, "Packet sent to network layer successfully.\n");
