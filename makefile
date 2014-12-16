@@ -22,7 +22,7 @@ client_physical_layer_error.o: client_physical_layer_error.c physical_layer.h
 	$(CC) $(CFLAGS) -c client_physical_layer_error.c
 
 photo_server: photo_server.o util.o server_network_layer.o server_data_link_layer.o data_link_layer.o physical_layer.o server_physical_layer_error.o
-	$(CC) $(CFLAGS) -lpthread -o team_3_photo_server photo_server.o util.o server_network_layer.o server_data_link_layer.o data_link_layer.o physical_layer.o server_physical_layer_error.o
+	$(CC) $(CFLAGS) -o team_3_photo_server photo_server.o util.o server_network_layer.o server_data_link_layer.o data_link_layer.o physical_layer.o server_physical_layer_error.o
 
 photo_server.o: photo_server.c photo.h util.h
 	$(CC) $(CFLAGS) -c photo_server.c

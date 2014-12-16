@@ -19,16 +19,7 @@
 void handle_client(int client_socket);
 
 /*
- * @brief Function for thread to run when a new client is accepted. Handles client by receiving packets of photos
- * @param *arg The client socket to handle
- */
-void *server_thread(void *arg)
-{
-    handle_client((long) arg);
-}
-
-/*
- * @brief Main server function. Creates threads when accepting new connections
+ * @brief Main server function. Forks children when accepting new connections
  */
 int main(int argc, char *argv[])
 {
@@ -57,13 +48,15 @@ int main(int argc, char *argv[])
         {
             exit_with_error("Accept failed");
         }
-        
-        pthread_t tid;
-        if (pthread_create(&tid, NULL, server_thread, (void*)client_socket) != 0)
-        {
-            exit_with_error("Thread error");
+
+        pid_t pid;
+        if ((pid = fork()) < 0) {
+            exit_with_error("Fork error");
         }
-        pthread_detach(tid);
+        else if (pid == 0) {
+            handle_client(client_socket);
+            exit(0);
+        }
     }
 }
 
