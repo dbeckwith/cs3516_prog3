@@ -16,11 +16,13 @@ typedef union
     struct frame
     {
         seq_t seq_num;
-        uint8_t data[FRAME_DATA_SIZE];
         uint8_t data_length;
-        uint8_t error_detect[2];
+        uint8_t data[FRAME_DATA_SIZE];
+        uint16_t chksum;
     } frame;
     uint8_t bytes[sizeof(struct frame)];
 } frame_t;
+
+uint16_t gen_chksum(frame_t* frame);
 
 #endif

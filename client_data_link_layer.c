@@ -44,7 +44,8 @@ int data_link_send_packet(int socket, packet_t* packet)
         // copy packet bytes into frame data
         memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
         frame.frame.data_length = chunk_len;
-        memcpy(&frame.frame.seq_num, &curr_seq_num, sizeof(curr_seq_num));
+        frame.frame.seq_num = curr_seq_num;
+        frame.frame.chksum = gen_chksum(&frame);
 
         while (true) {
 	        // send frame through physical layer
@@ -67,6 +68,11 @@ int data_link_send_packet(int socket, packet_t* packet)
 	            }
 	            return -1;
 	        }
+
+            if (frame.frame.chksum != gen_chksum(&frame)) {
+                DEBUG(DATA_LINK_STR "frame ack checksum failed");
+                continue;
+            }
 
 	        if (!IS_ACK_FRAME(frame.frame)) {
 	            DEBUG(DATA_LINK_STR "frame ack was not an ack\n");

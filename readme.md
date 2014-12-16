@@ -36,3 +36,7 @@ Performance Timing:
 * TODO
 
 
+
+http://www.isthe.com/chongo/tech/comp/fnv/
+
+

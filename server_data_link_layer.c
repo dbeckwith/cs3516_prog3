@@ -55,6 +55,11 @@ int data_link_recv_packet(int socket, packet_t* packet)
 	        {
 	            return -1;
 	        }
+
+            if (frame.frame.chksum != gen_chksum(&frame)) {
+                continue;
+            }
+
 	        if (frame.frame.seq_num != curr_seq_num) {
 	        	continue;
 	        }
@@ -71,7 +76,8 @@ int data_link_recv_packet(int socket, packet_t* packet)
         memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
 
         frame.frame.data_length = 0;
-        memcpy(&frame.frame.seq_num, &curr_seq_num, sizeof(curr_seq_num));
+        frame.frame.seq_num = curr_seq_num;
+        frame.frame.chksum = gen_chksum(&frame);
 
         if (physical_send_frame(socket, &frame) != sizeof(frame_t))
         {
