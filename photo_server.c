@@ -113,8 +113,8 @@ void handle_client(int client_socket)
         memcpy(photo_file_name, recv_buff, photo_file_name_len);
 
         // Format the name to the new file name
-        sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
-        sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
+        sscanf(photo_file_name, PHOTO_STR "%1d%1d." PHOTO_EXT, &client_id, &photo_id);
+        sprintf(photo_file_name, "%s%s%d%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
         printf(SERVER_STR "[Client %d]: Receiving photo #%d\n", client_id, photo_id);
 

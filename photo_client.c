@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
     for (photo_num = 0; photo_num < photo_count; photo_num++)
     {
-        photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
+        photo_file_name_len = sprintf(photo_file_name, "%s%1d%1d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
         DEBUG(CLIENT_STR "%s\n", photo_file_name);
 
         printf(CLIENT_STR "Sending photo #%d (%s)\n", photo_num+1, photo_file_name);

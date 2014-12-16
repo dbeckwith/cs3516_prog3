@@ -27,7 +27,7 @@ Output Files:
     This file is the log for the server for the client id <id>.
 * client_<id>.log
     This file is the log for the client with id <id>.
-* photonew_<id>_<photo num>.jpg
+* photonew<id><photo num>.jpg
     This type of file is the new photo produced from the sent packets from the client. The client is defined by id <id> and <photo num> is the nth photo sent by that client.
 
 Outside Sources:
