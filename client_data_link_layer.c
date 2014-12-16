@@ -13,6 +13,11 @@
 #include "client_data_link_layer.h"
 #include "physical_layer.h"
 
+static int frame_retransmissions = 0;
+static int frames_sent = 0;
+static int good_acks = 0;
+static int bad_acks = 0;
+
 /*
  * @brief Send buffer to data link layer in frames
  * @param socket The socket to send the frames to
@@ -28,6 +33,8 @@ int data_link_send_packet(int socket, packet_t* packet)
     unsigned int chunk_len;
 	static seq_t curr_seq_num = 0;
     int recv_err;
+
+    bool first_run = true;
 
     packet_size = sizeof(packet_t);
     frame_count = 0;
@@ -52,6 +59,11 @@ int data_link_send_packet(int socket, packet_t* packet)
 
 	        // send frame through physical layer
 	        DEBUG(DATA_LINK_STR "sending frame through physical layer\n");
+            if (!first_run)
+            {
+                photo_log(socket, "Frame %d of packet %d being resent.\n", frame_count, packet_count);
+            }
+            first_run = false;
 	        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
 	        {
 	            return -1;
@@ -119,4 +131,9 @@ int data_link_recv_ack_packet(int socket)
         return -1;
     }
     return 0;
+}
+
+void data_link_log_totals(int socket)
+{
+    photo_log(socket, "Frame retransmissions: %d, Frames sent: %d, Good ACKs: %d, Bad ACKs: %d\n", frame_retransmissions, frames_sent, good_acks, bad_acks);
 }
