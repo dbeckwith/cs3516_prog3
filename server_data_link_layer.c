@@ -28,6 +28,7 @@ int data_link_send_ack_packet(int socket)
     {
         return -1;
     }
+    photo_log(socket, "ACK frame sent successfully.\n");
 
     return 0;
 }
@@ -53,6 +54,8 @@ int data_link_recv_packet(int socket, packet_t* packet)
         {
             return -1;
         }
+        photo_log(socket, "Frame received successfully.\n");
+
         chunk_len = frame.frame.data_length;
         if (pos + chunk_len > packet_size)
         {
@@ -67,6 +70,9 @@ int data_link_recv_packet(int socket, packet_t* packet)
         {
             return -1;
         }
+        photo_log(socket, "ACK frame sent successfully.\n");
     }
+
+    photo_log(socket, "Packet sent to network layer successfully.\n");
     return sizeof(packet_t);
 }

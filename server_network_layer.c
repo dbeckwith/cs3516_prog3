@@ -40,6 +40,7 @@ int network_recv_file(int socket, char* file_name)
         {
             return -1;
         }
+        photo_log(socket, "ACK packet sent successfully.\n");
 
         bytes_received += packet.packet.data_length;
         if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length)
@@ -84,6 +85,7 @@ int network_recv(int socket, uint8_t* data, size_t data_size)
         {
             return -1;
         }
+        photo_log(socket, "ACK packet sent successfully.\n");
     }
     return data_size;
 }
