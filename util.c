@@ -6,6 +6,7 @@
 /*
  * @brief Creates error and includes given message as output.
  * @param error The error message to output in addition to perror.
+ * @author anivarthi
  */
 void exit_with_error(char* error)
 {
@@ -29,6 +30,7 @@ log_map_entry_t* log_map;
  * @param socket The socket to add
  * @param file_name The file name associated with the socket
  * @return 0 on success, -1 on error
+ * @author djbeckwith
  */
 int add_photo_log(int socket, char* file_name)
 {
@@ -59,6 +61,7 @@ int add_photo_log(int socket, char* file_name)
  * @brief Remove an entry to linked list of entries
  * @param socket The socket to remove
  * @return 0 on success, -1 on error
+ * @author djbeckwith
  */
 int close_photo_log(int socket)
 {
@@ -97,6 +100,7 @@ int close_photo_log(int socket)
  * @param socket The socket to log
  * @param format The format to log, similar to printf(), with additional arguments
  * @return 0 on success, -1 on error
+ * @author djbeckwith
  */
 int photo_log(int socket, const char* format, ...)
 {

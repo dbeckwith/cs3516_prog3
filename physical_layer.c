@@ -16,6 +16,7 @@
  * @param serverName Hostname to connect to
  * @param serverPort The port to connect to
  * @return serverSocket The socket that has been connected
+ * @author djbeckwith
  */
 int physical_connect(char *serverName, unsigned short serverPort)
 {
@@ -80,6 +81,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
  * @param buffer The buffer to send
  * @param buffer_size The size of the buffer to send
  * @return Result of send()
+ * @author djbeckwith
  */
 int physical_send_frame(int socket, frame_t* frame)
 {
@@ -153,6 +155,7 @@ int recv_to(int fd, char *buffer, int len, int flags, int to) {
  * @param frame The frame to receive into
  * @param timeout Defines whether to call timeout recv or normal recv
  * @return chunk_size on error, frame_size on success
+ * @author anivarthi
  */
 int physical_recv_frame(int socket, frame_t* frame, bool timeout)
 {
@@ -192,6 +195,7 @@ int physical_recv_frame(int socket, frame_t* frame, bool timeout)
  * @param port The port to listen on
  * @param max_pending_clients The max number of clients to hold in connection queue
  * @return ser_socket The server socket being listened to
+ * @author anivarthi
  */
 int physical_listen(unsigned short port, unsigned int max_pending_clients)
 {
@@ -228,6 +232,7 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
  * @param client_addr The client address struct to accept
  * @param client_len The length of the client address being given
  * @return The client socket that is accepted
+ * @author anivarthi
  */
 int physical_accept(int socket, struct sockaddr_in* client_addr, unsigned int* client_len)
 {

@@ -15,6 +15,7 @@
  * @param socket The socket to send the packet to
  * @param file_name The photo file to open and read
  * @return bytes_sent The number of bytes sent, or -1 on error
+ * @author djbeckwith
  */
 int network_send_file(int socket, char* file_name)
 {
@@ -106,6 +107,7 @@ int network_send_file(int socket, char* file_name)
  * @param data The buffer to be sent
  * @param data_size The length of given buffer
  * @return data_size The number of bytes sent, or -1 on error
+ * @author djbeckwith
  */
 int network_send(int socket, uint8_t* data, size_t data_size)
 {

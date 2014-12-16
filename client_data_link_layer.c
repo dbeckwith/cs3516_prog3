@@ -23,6 +23,7 @@ static int bad_acks = 0;
  * @param socket The socket to send the frames to
  * @param packet The packet that is to be sent
  * @return The size of the packet sent, or -1 on error
+ * @author djbeckwith
  */
 int data_link_send_packet(int socket, packet_t* packet)
 {
@@ -134,6 +135,7 @@ int data_link_send_packet(int socket, packet_t* packet)
  * @brief Receive buffer from data link layer in frames
  * @param socket The socket to receive the frame from
  * @return 0 on success, -1 on error
+ * @author djbeckwith
  */
 int data_link_recv_ack_packet(int socket)
 {
@@ -151,6 +153,7 @@ int data_link_recv_ack_packet(int socket)
 
 /*
  * @brief Log frame performance totals to log file
+ * @author anivarthi
  */
 void data_link_log_totals(int socket)
 {

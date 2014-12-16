@@ -18,6 +18,7 @@
 #define SENDBUFSIZE 256
 #define MAXFILENAME 256
 
+/* @author anivarthi */
 int main(int argc, char* argv[])
 {
     int sock;

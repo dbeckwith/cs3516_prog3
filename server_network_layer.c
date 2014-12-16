@@ -15,6 +15,7 @@
  * @param socket The socketto receive from
  * @param file_name The file to output the photo to
  * @return bytes_received The bytes received in packets, or -1 on error
+ * @author anivarthi
  */
 int network_recv_file(int socket, char* file_name)
 {
@@ -64,6 +65,7 @@ int network_recv_file(int socket, char* file_name)
  * @param data The data to be filled
  * @param data_size The length of given data
  * @return data_size The number of bytes received, or -1 on error
+ * @author anivarthi
  */
 int network_recv(int socket, uint8_t* data, size_t data_size)
 {

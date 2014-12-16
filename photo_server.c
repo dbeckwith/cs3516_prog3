@@ -20,6 +20,7 @@ void handle_client(int client_socket);
 
 /*
  * @brief Main server function. Forks children when accepting new connections
+ * @author anivarthi
  */
 int main(int argc, char *argv[])
 {
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
 /*
  * @brief Handles client given a socket. Receives photo name and calls protocols in lower levels to handle receiving packets from client.
  * @param client_socket The socket to receive the photo(s) from
+ * @author djbeckwith
  */
 void handle_client(int client_socket)
 {

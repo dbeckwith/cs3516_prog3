@@ -15,6 +15,7 @@
  * @brief Send buffer to data link layer in frames
  * @param socket The socket to send the frames to
  * @return 0 on success, or -1 on error
+ * @author anivarthi
  */
 int data_link_send_ack_packet(int socket)
 {
@@ -35,6 +36,7 @@ int data_link_send_ack_packet(int socket)
  * @param socket The socket to receive the frame from
  * @param packet The frame struct that is to be received
  * @return The number of bytes received, or -1 on error
+ * @author anivarthi
  */
 int data_link_recv_packet(int socket, packet_t* packet)
 {

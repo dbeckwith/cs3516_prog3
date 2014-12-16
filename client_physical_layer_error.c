@@ -17,6 +17,7 @@
  * @brief Function for creating errors on every 5th frame on the client side
  * @param socket The socket to log to
  * @param frame The frame to generate errors on
+ * @author djbeckwith
  */
 int physical_error(int socket, frame_t* frame)
 {
