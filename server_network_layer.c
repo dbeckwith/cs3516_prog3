@@ -18,40 +18,40 @@
  */
 int network_recv_file(int socket, char* file_name)
 {
-	packet_t packet;
-	FILE* output;
-	int bytes_received;
-	bytes_received = 0;
+    packet_t packet;
+    FILE* output;
+    int bytes_received;
+    bytes_received = 0;
 
-	if ((output = fopen(file_name, "wb")) == NULL)
-	{
-		return -1;
-	}
+    if ((output = fopen(file_name, "wb")) == NULL)
+    {
+        return -1;
+    }
 
-	packet.packet.eof = false;
-	while (!packet.packet.eof)
-	{
-		if (data_link_recv_packet(socket, &packet) != sizeof(packet))
-		{
-			return -1;
-		}
+    packet.packet.eof = false;
+    while (!packet.packet.eof)
+    {
+        if (data_link_recv_packet(socket, &packet) != sizeof(packet))
+        {
+            return -1;
+        }
 
-		if (data_link_send_ack_packet(socket) != 0)
-		{
-			return -1;
-		}
+        if (data_link_send_ack_packet(socket) != 0)
+        {
+            return -1;
+        }
 
-		bytes_received += packet.packet.data_length;
-		if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length)
-		{
-			return bytes_received;
-		}
-	}
-	if (fclose(output) < 0)
-	{
-		return -1;
-	}
-	return bytes_received;
+        bytes_received += packet.packet.data_length;
+        if (fwrite(packet.packet.data, 1, packet.packet.data_length, output) != packet.packet.data_length)
+        {
+            return bytes_received;
+        }
+    }
+    if (fclose(output) < 0)
+    {
+        return -1;
+    }
+    return bytes_received;
 }
 
 /*
@@ -63,27 +63,27 @@ int network_recv_file(int socket, char* file_name)
  */
 int network_recv(int socket, uint8_t* data, size_t data_size)
 {
-	int pos;
-	unsigned int chunk_len;
-	packet_t packet;
+    int pos;
+    unsigned int chunk_len;
+    packet_t packet;
 
-	for (pos = 0; pos < data_size; pos += chunk_len)
-	{
-		if (data_link_recv_packet(socket, &packet) != sizeof(packet_t))
-		{
-			return -1;
-		}
-		chunk_len = packet.packet.data_length;
-		if (pos + chunk_len > data_size)
-		{
-			return -1;
-		}
-		memcpy(data + pos, packet.packet.data, chunk_len);
+    for (pos = 0; pos < data_size; pos += chunk_len)
+    {
+        if (data_link_recv_packet(socket, &packet) != sizeof(packet_t))
+        {
+            return -1;
+        }
+        chunk_len = packet.packet.data_length;
+        if (pos + chunk_len > data_size)
+        {
+            return -1;
+        }
+        memcpy(data + pos, packet.packet.data, chunk_len);
 
-		if (data_link_send_ack_packet(socket) != 0)
-		{
-			return -1;
-		}
-	}
-	return data_size;
+        if (data_link_send_ack_packet(socket) != 0)
+        {
+            return -1;
+        }
+    }
+    return data_size;
 }

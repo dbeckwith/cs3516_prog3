@@ -110,9 +110,9 @@ int physical_recv_frame(int socket, frame_t* frame)
     frame_size = sizeof(frame_t);
 
     for (pos = 0; pos < frame_size; pos += chunk_size) {
-        printf(PHYSICAL_STR "receiving frame segment from actual network layer\n");
+        if (DEBUG) printf(PHYSICAL_STR "receiving frame segment from actual network layer\n");
         if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0) {
-            printf(PHYSICAL_STR "actual receive failed\n");
+            if (DEBUG) printf(PHYSICAL_STR "actual receive failed\n");
             return -1;
         }
     }
@@ -162,7 +162,10 @@ int physical_listen(unsigned short port, unsigned int max_pending_clients)
  * @param client_len The length of the client address being given
  * @return The client socket that is accepted
  */
-int physical_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len)
+int physical_accept(int socket, struct sockaddr_in* client_addr, unsigned int* client_len)
 {
-    return accept(socket, client_addr, client_len);
+    int ret;
+    ret = accept(socket, (struct sockaddr*)client_addr, client_len);
+    printf(PHYSICAL_STR "Accepting client %s\n", inet_ntoa(client_addr->sin_addr));
+    return ret;
 }

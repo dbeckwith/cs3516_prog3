@@ -20,16 +20,16 @@
  */
 int data_link_send_ack_packet(int socket)
 {
-	frame_t frame;
-	frame.frame.ack = true;
-	frame.frame.data_length = 0;
+    frame_t frame;
+    frame.frame.ack = true;
+    frame.frame.data_length = 0;
 
-	if (physical_send_frame(socket, &frame) != sizeof(frame_t))
-	{
-		return -1;
-	}
+    if (physical_send_frame(socket, &frame) != sizeof(frame_t))
+    {
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 /*
@@ -40,33 +40,33 @@ int data_link_send_ack_packet(int socket)
  */
 int data_link_recv_packet(int socket, packet_t* packet)
 {
-	int pos;
-	unsigned int chunk_len;
-	size_t packet_size;
-	frame_t frame;
+    int pos;
+    unsigned int chunk_len;
+    size_t packet_size;
+    frame_t frame;
 
-	packet_size = sizeof(packet_t);
+    packet_size = sizeof(packet_t);
 
-	for (pos = 0; pos < packet_size; pos += chunk_len)
-	{
-		if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
-		{
-			return -1;
-		}
-		chunk_len = frame.frame.data_length;
-		if (pos + chunk_len > packet_size)
-		{
-			return -1;
-		}
-		memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
+    for (pos = 0; pos < packet_size; pos += chunk_len)
+    {
+        if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
+        {
+            return -1;
+        }
+        chunk_len = frame.frame.data_length;
+        if (pos + chunk_len > packet_size)
+        {
+            return -1;
+        }
+        memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
 
-		frame.frame.ack = true;
-		frame.frame.data_length = 0;
+        frame.frame.ack = true;
+        frame.frame.data_length = 0;
 
-		if (physical_send_frame(socket, &frame) != sizeof(frame_t))
-		{
-			return -1;
-		}
-	}
-	return sizeof(packet_t);
+        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
+        {
+            return -1;
+        }
+    }
+    return sizeof(packet_t);
 }

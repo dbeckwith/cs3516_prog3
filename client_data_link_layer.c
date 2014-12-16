@@ -20,47 +20,47 @@
  */
 int data_link_send_packet(int socket, packet_t* packet)
 {
-	frame_t frame;
-	size_t packet_size;
-	unsigned int pos;
-	unsigned int chunk_len;
+    frame_t frame;
+    size_t packet_size;
+    unsigned int pos;
+    unsigned int chunk_len;
 
-	packet_size = sizeof(packet_t);
+    packet_size = sizeof(packet_t);
 
-	chunk_len = FRAME_DATA_SIZE;
+    chunk_len = FRAME_DATA_SIZE;
 
-	// split packet into individual frames to send to server
-	for (pos = 0; pos < packet_size; pos += FRAME_DATA_SIZE)
-	{
-		if (pos + FRAME_DATA_SIZE >= packet_size)
-		{
-			// chunk length is just to end of packet
-			chunk_len = packet_size - pos;
-		}
-		// copy packet bytes into frame data
-		memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
-		frame.frame.data_length = chunk_len;
-		frame.frame.ack = false;
+    // split packet into individual frames to send to server
+    for (pos = 0; pos < packet_size; pos += FRAME_DATA_SIZE)
+    {
+        if (pos + FRAME_DATA_SIZE >= packet_size)
+        {
+            // chunk length is just to end of packet
+            chunk_len = packet_size - pos;
+        }
+        // copy packet bytes into frame data
+        memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
+        frame.frame.data_length = chunk_len;
+        frame.frame.ack = false;
 
-		// send frame through physical layer
-		printf(DATA_LINK_STR "sending frame through physical layer\n");
-		if (physical_send_frame(socket, &frame) != sizeof(frame_t))
-		{
-			return -1;
-		}
+        // send frame through physical layer
+        if (DEBUG) printf(DATA_LINK_STR "sending frame through physical layer\n");
+        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
+        {
+            return -1;
+        }
 
-		// wait for ACK frame
-		printf(DATA_LINK_STR "waiting for frame ack through physical layer\n");
-		if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
-			printf(DATA_LINK_STR "frame ack was wrong size\n");
-			return -1;
-		}
-		if (!frame.frame.ack) {
-			printf(DATA_LINK_STR "frame ack was not an ack\n");
-			return -1;
-		}
-	}
-	return sizeof(packet_t);
+        // wait for ACK frame
+        if (DEBUG) printf(DATA_LINK_STR "waiting for frame ack through physical layer\n");
+        if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
+            if (DEBUG) printf(DATA_LINK_STR "frame ack was wrong size\n");
+            return -1;
+        }
+        if (!frame.frame.ack) {
+            if (DEBUG) printf(DATA_LINK_STR "frame ack was not an ack\n");
+            return -1;
+        }
+    }
+    return sizeof(packet_t);
 }
 
 /*
@@ -72,13 +72,13 @@ int data_link_send_packet(int socket, packet_t* packet)
  */
 int data_link_recv_ack_packet(int socket)
 {
-	frame_t frame;
+    frame_t frame;
 
-	if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
-		return -1;
-	}
-	if (!frame.frame.ack) {
-		return -1;
-	}
-	return 0;
+    if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
+        return -1;
+    }
+    if (!frame.frame.ack) {
+        return -1;
+    }
+    return 0;
 }

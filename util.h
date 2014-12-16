@@ -7,7 +7,7 @@
 #define true 1
 
 // Logging
-#define CLIENT_LOG_FILE "client.log"
+#define DEBUG false
 
 // Function definitions
 
