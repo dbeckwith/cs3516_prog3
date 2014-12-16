@@ -20,16 +20,4 @@ typedef union
     uint8_t bytes[sizeof(struct packet)];
 } packet_t;
 
-int packet_count;
-
-// Function definitions
-
-int network_send_file(int socket, char* file_name);
-int network_send(int socket, uint8_t* buffer, unsigned int buffer_size);
-int network_recv_file(int socket, char* file_name);
-int network_recv(int socket, uint8_t* buffer, unsigned int buffer_size);
-int network_connect(char* url, unsigned short port);
-int network_listen(unsigned short port, unsigned int max_pending_clients);
-int network_accept(int socket, struct sockaddr* client_addr, unsigned int* client_len);
-
 #endif

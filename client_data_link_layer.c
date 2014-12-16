@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include "util.h"
 #include "network_layer.h"
+#include "client_network_layer.h"
 #include "data_link_layer.h"
 #include "client_data_link_layer.h"
 #include "physical_layer.h"
@@ -56,9 +57,6 @@ int data_link_send_packet(int socket, packet_t* packet)
 		if (!frame.frame.ack) {
 			return -1;
 		}
-
-		frame_count++;
-		photo_log(socket, "Frame %d of packet %d was sent successfully.\n", frame_count, packet_count);
 	}
 	return sizeof(packet_t);
 }

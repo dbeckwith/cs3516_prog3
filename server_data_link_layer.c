@@ -6,6 +6,7 @@
 #include <netdb.h>
 #include "util.h"
 #include "network_layer.h"
+#include "server_network_layer.h"
 #include "data_link_layer.h"
 #include "server_data_link_layer.h"
 #include "physical_layer.h"
