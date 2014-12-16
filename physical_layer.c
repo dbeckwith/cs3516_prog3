@@ -11,8 +11,6 @@
 #include "photo.h"
 #include "physical_layer.h"
 
-#define TIMEOUT 1000
-
 /*
  * @brief Converts hostname and port number to IP address and connects socket
  * @param serverName Hostname to connect to

@@ -9,6 +9,8 @@
 
 #define PHYSICAL_STR "[PHYSICAL LAYER]: " // String to display for debugging at physical layer
 
+#define TIMEOUT 200
+
 #define ERR_TIMEOUT -2
 
 // Function definitions
