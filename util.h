@@ -7,7 +7,8 @@
 #define true 1
 
 // Logging
-#define DEBUG false
+#define DEBUG_FLAG false
+#define DEBUG if (DEBUG_FLAG) printf
 
 // Function definitions
 

@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     for (photo_num = 0; photo_num < photo_count; photo_num++)
     {
         photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
-        if (DEBUG) printf(CLIENT_STR "%s\n", photo_file_name);
+        DEBUG(CLIENT_STR "%s\n", photo_file_name);
 
         memcpy(send_buff, &photo_file_name_len, sizeof(photo_file_name_len));
         if (network_send(sock, send_buff, sizeof(photo_file_name_len)) != sizeof(photo_file_name_len))

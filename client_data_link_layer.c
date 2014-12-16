@@ -48,7 +48,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 
         while (true) {
 	        // send frame through physical layer
-	        if (DEBUG) printf(DATA_LINK_STR "sending frame through physical layer\n");
+	        DEBUG(DATA_LINK_STR "sending frame through physical layer\n");
 	        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
 	        {
 	            return -1;
@@ -57,11 +57,11 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        photo_log(socket, "Frame %d of packet %d sent successfully.\n", ++frame_count, packet_count);
 
 	        // wait for ACK frame
-	        if (DEBUG) printf(DATA_LINK_STR "waiting for frame ack through physical layer\n");
+	        DEBUG(DATA_LINK_STR "waiting for frame ack through physical layer\n");
 	        if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
-	            if (DEBUG) printf(DATA_LINK_STR "error receiving frame ack\n");
+	            DEBUG(DATA_LINK_STR "error receiving frame ack\n");
 	            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-	            	if (DEBUG) printf(DATA_LINK_STR "timeout waiting for ack frame");
+	            	DEBUG(DATA_LINK_STR "timeout waiting for ack frame");
 	            	// timeout
 	            	continue;
 	            }
@@ -69,17 +69,17 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        }
 
 	        if (!IS_ACK_FRAME(frame.frame)) {
-	            if (DEBUG) printf(DATA_LINK_STR "frame ack was not an ack\n");
+	            DEBUG(DATA_LINK_STR "frame ack was not an ack\n");
 	            return -1;
 	        }
 
 	        // check ACK's seq num
 	        if (frame.frame.seq_num != curr_seq_num) {
-            	if (DEBUG) printf(DATA_LINK_STR "ack frame was wrong sequence number");
+            	DEBUG(DATA_LINK_STR "ack frame was wrong sequence number");
 	        	continue;
 	        }
 
-	        if (DEBUG) printf(DATA_LINK_STR "ack frame accepted\n");
+	        DEBUG(DATA_LINK_STR "ack frame accepted\n");
 	        break;
 	    }
 
