@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     if ((serv_socket = physical_listen(SERVER_PORT, MAXPENDING)) < 0)
     {
-        exit_with_error("Network_listen() failed");
+        exit_with_error("Listen failed");
     }
 
     // Server runs continuously
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
         if ((client_socket = physical_accept(serv_socket, &photo_client_addr, &client_addr_len)) < 0) 
         {
-            exit_with_error("Network_accept() failed");
+            exit_with_error("Accept failed");
         }
         
         pthread_t tid;
@@ -81,7 +81,7 @@ void handle_client(int client_socket)
 
     if (network_recv(client_socket, recv_buff, sizeof(client_id)) != sizeof(client_id))
     {
-        exit_with_error("Recv() failed");
+        exit_with_error("Receive got a different number of bytes than expected for client id");
     }
 
     memcpy(&client_id, recv_buff, sizeof(client_id));
@@ -97,14 +97,14 @@ void handle_client(int client_socket)
 
         if (network_recv(client_socket, recv_buff, sizeof(photo_file_name_len)) != sizeof(photo_file_name_len))
         {
-            exit_with_error("Recv() failed");
+            exit_with_error("Receive got a different number of bytes than expected for file name length");
         }
 
         memcpy(&photo_file_name_len, recv_buff, sizeof(photo_file_name_len));
 
         if (network_recv(client_socket, recv_buff, photo_file_name_len) != photo_file_name_len)
         {
-            exit_with_error("Recv() failed");
+            exit_with_error("Receive got a different number of bytes than expected for file name");
         }
         photo_file_name = (char*)malloc(photo_file_name_len);
         memcpy(photo_file_name, recv_buff, photo_file_name_len);
@@ -115,17 +115,17 @@ void handle_client(int client_socket)
 
         printf(SERVER_STR "[Client %d]: Receiving photo #%d\n", client_id, photo_id);
 
-        // While not DONE or NEXT FILE, keep receving photo packets
+        // While not DONE or NEXT FILE, keep receiving photo packets
         if (network_recv_file(client_socket, photo_file_name) < 0)
         {
-            exit_with_error("Network_recv() failed");
+            exit_with_error("Receive file failed");
         }
 
         printf(SERVER_STR "[Client %d]: Photo saved to %s\n", client_id, photo_file_name);
 
         if (network_recv(client_socket, recv_buff, 1) != 1)
         {
-            exit_with_error("Recv() failed");
+            exit_with_error("Receive got a different number of bytes than expected for command");
         }
         command = recv_buff[0];
     }
