@@ -14,7 +14,6 @@
 #define RCVBUFSIZE 256
 #define SERVER_STR "[PHOTO SERVER]: "
 
-int recv_message(int socket, char* buffer, unsigned int len);
 void handle_client(int client_socket);
 
 /*
@@ -73,19 +72,19 @@ int main(int argc, char *argv[])
 void handle_client(int client_socket)
 {
 	uint8_t recv_buff[RCVBUFSIZE];
-	unsigned int photo_file_len;
+	size_t photo_file_name_len;
 	char* photo_file_name; //  Buffer for output photo file name
 	int command;
 	int client_id;
 	int photo_id;
 	char log_file_name[RCVBUFSIZE];
 
-	if (recv_message(client_socket, recv_buff, 4) != 4)
+	if (network_recv(client_socket, recv_buff, sizeof(client_id)) != sizeof(client_id))
 	{
 		exit_with_error("Recv() failed");
 	}
 
-	memcpy(&client_id, recv_buff, 4);
+	memcpy(&client_id, recv_buff, sizeof(client_id));
 
 	sprintf(log_file_name, "server_%d.log", client_id);
 	add_photo_log(client_socket, log_file_name);
@@ -94,19 +93,19 @@ void handle_client(int client_socket)
 	while (command != DONE_CMD)
 	{
 
-		if (recv_message(client_socket, recv_buff, 4) != 4)
+		if (network_recv(client_socket, recv_buff, sizeof(photo_file_name_len)) != sizeof(photo_file_name_len))
 		{
 			exit_with_error("Recv() failed");
 		}
 
-		memcpy(&photo_file_len, recv_buff, 4);
+		memcpy(&photo_file_name_len, recv_buff, sizeof(photo_file_name_len));
 
-		if (recv_message(client_socket, recv_buff, photo_file_len) != photo_file_len)
+		if (network_recv(client_socket, recv_buff, photo_file_name_len) != photo_file_name_len)
 		{
 			exit_with_error("Recv() failed");
 		}
-		photo_file_name = (char*)malloc(photo_file_len);
-		memcpy(photo_file_name, recv_buff, photo_file_len);
+		photo_file_name = (char*)malloc(photo_file_name_len);
+		memcpy(photo_file_name, recv_buff, photo_file_name_len);
 
 		// Format the name to the new file name
 		sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
@@ -118,7 +117,7 @@ void handle_client(int client_socket)
 			exit_with_error("Network_recv() failed");
 		}
 
-		if (recv_message(client_socket, recv_buff, 1) != 1)
+		if (network_recv(client_socket, recv_buff, 1) != 1)
 		{
 			exit_with_error("Recv() failed");
 		}
@@ -126,23 +125,4 @@ void handle_client(int client_socket)
 	}
 	close_photo_log(client_socket);
 	close(client_socket);
-}
-
-/*
-Receives exactly len bytes from the client.
-*/
-int recv_message(int socket, char* buffer, unsigned int len)
-{
-	unsigned int pos;
-	int chunk_len;
-
-	for (pos = 0; pos < len; pos += chunk_len)
-	{
-		chunk_len = network_recv(socket, buffer + pos, len - pos);
-		if (chunk_len <= 0)
-		{
-			return pos;
-		}
-	}
-	return pos;
 }
