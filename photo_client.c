@@ -8,7 +8,9 @@
 #include <netdb.h>
 #include "photo.h"
 #include "util.h"
+#include "client_network_layer.h"
 #include "network_layer.h"
+#include "physical_layer.h"
 
 #define CLIENT_STR "[PHOTO CLIENT]: "
 #define SENDBUFSIZE 256

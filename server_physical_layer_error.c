@@ -11,5 +11,5 @@
 
 int physical_error(int socket, frame_t* frame)
 {
-    photo_log("Server error function called.\n");
+    photo_log(socket, "Server error function called.\n");
 }

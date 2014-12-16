@@ -90,7 +90,7 @@ int physical_connect(char *serverName, unsigned short serverPort)
  */
 int physical_send_frame(int socket, frame_t* frame)
 {
-    physical_error(frame);
+    physical_error(socket, frame);
     return send(socket, frame->bytes, sizeof(frame_t), 0);
 }
 
@@ -107,7 +107,7 @@ int physical_recv_frame(int socket, frame_t* frame)
     int total_received;
 
     while (total_received < sizeof(frame_t)) {
-        if ((bytes_received = recv(socket, frame->bytes + total_received, sizeof(frame_t) - total_received), 0) <= 0) {
+        if ((bytes_received = recv(socket, frame->bytes + total_received, sizeof(frame_t) - total_received, 0)) <= 0) {
             return -1;
         }
         total_received += bytes_received;

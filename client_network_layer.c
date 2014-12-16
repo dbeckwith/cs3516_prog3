@@ -34,8 +34,6 @@ int network_send_file(int socket, char* file_name)
 	bytes_sent = 0;
 	packet_t packet;
 
-	packet_count = 0;
-
 	curr_read_buffer = read_buffer1;
 	curr_read_size = &read_size1;
 	prev_read_buffer = read_buffer2;

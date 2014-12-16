@@ -8,7 +8,9 @@
 #include <pthread.h>
 #include "photo.h"
 #include "util.h"
+#include "server_network_layer.h"
 #include "network_layer.h"
+#include "physical_layer.h"
 
 #define MAXPENDING 5 //   Max number of clients in queue
 #define RCVBUFSIZE 256
@@ -38,7 +40,7 @@ int main(int argc, char *argv[])
 		exit(1); 
 	}
 
-	if ((serv_socket = network_listen(SERVER_PORT, MAXPENDING)) < 0)
+	if ((serv_socket = physical_listen(SERVER_PORT, MAXPENDING)) < 0)
 	{
 		exit_with_error("Network_listen() failed");
 	}
@@ -48,7 +50,7 @@ int main(int argc, char *argv[])
 	{
 		client_addr_len = sizeof(photo_client_addr); // Length of client address
 
-		if ((client_socket = network_accept(serv_socket, (struct sockaddr*)&photo_client_addr, &client_addr_len)) < 0) 
+		if ((client_socket = physical_accept(serv_socket, (struct sockaddr*)&photo_client_addr, &client_addr_len)) < 0) 
 		{
 			exit_with_error("Network_accept() failed");
 		}

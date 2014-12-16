@@ -26,7 +26,6 @@ int data_link_send_packet(int socket, packet_t* packet)
 	unsigned int chunk_len;
 
 	packet_size = sizeof(packet_t);
-	frame_count = 0;
 
 	chunk_len = FRAME_DATA_SIZE;
 
@@ -39,7 +38,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 			chunk_len = packet_size - pos;
 		}
 		// copy packet bytes into frame data
-		memcpy(frame.frame.data, packet.bytes + pos, chunk_len);
+		memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
 		frame.frame.data_length = chunk_len;
 		frame.frame.ack = false;
 
