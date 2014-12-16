@@ -30,6 +30,30 @@ Output Files:
 * photonew<id><photo num>.jpg
     This type of file is the new photo produced from the sent packets from the client. The client is defined by id <id> and <photo num> is the nth photo sent by that client.
 
+Source Files:
+* client_data_link_layer.c
+* client_data_link_layer.h
+* client_network_layer.c
+* client_network_layer.h
+* client_physical_layer_error.c
+* data_link_layer.c
+* data_link_layer.h
+* makefile
+* network_layer.h
+* photo.h
+* photo_client.c
+* photo_server.c
+* physical_layer.c
+* physical_layer.h
+* README
+* server_data_link_layer.c
+* server_data_link_layer.h
+* server_network_layer.c
+* server_network_layer.h
+* server_physical_layer_error.c
+* util.c
+* util.h
+
 Outside Sources:
 * FNV Hash Algorithm for frame checksums (used general algorithm and offset basis and FNV prime values)
     http://www.isthe.com/chongo/tech/comp/fnv/
