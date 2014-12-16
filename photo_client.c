@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	memcpy(send_buff, &client_id, sizeof(client_id));
 	if (network_send(sock, send_buff, sizeof(client_id)) != sizeof(client_id))
 	{
-		exit_with_error("Network_send() sent a different number of bytes than expected for file name length");
+		exit_with_error("Network_send() sent a different number of bytes than expected for client id");
 	}
 
 	for (photo_num = 0; photo_num < photo_count; photo_num++)

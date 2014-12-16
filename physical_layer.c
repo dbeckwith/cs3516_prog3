@@ -103,17 +103,21 @@ int physical_send_frame(int socket, frame_t* frame)
  */
 int physical_recv_frame(int socket, frame_t* frame)
 {
-    int bytes_received;
-    int total_received;
+    int pos;
+    size_t frame_size;
+    int chunk_size;
 
-    while (total_received < sizeof(frame_t)) {
-        if ((bytes_received = recv(socket, frame->bytes + total_received, sizeof(frame_t) - total_received, 0)) <= 0) {
+    frame_size = sizeof(frame_t);
+
+    for (pos = 0; pos < frame_size; pos += chunk_size) {
+        printf(PHYSICAL_STR "receiving frame segment from actual network layer\n");
+        if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0) {
+            printf(PHYSICAL_STR "actual receive failed\n");
             return -1;
         }
-        total_received += bytes_received;
     }
 
-    return total_received;
+    return frame_size;
 }
 
 /*

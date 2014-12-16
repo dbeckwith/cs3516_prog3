@@ -43,16 +43,20 @@ int data_link_send_packet(int socket, packet_t* packet)
 		frame.frame.ack = false;
 
 		// send frame through physical layer
+		printf(DATA_LINK_STR "sending frame through physical layer\n");
 		if (physical_send_frame(socket, &frame) != sizeof(frame_t))
 		{
 			return -1;
 		}
 
 		// wait for ACK frame
+		printf(DATA_LINK_STR "waiting for frame ack through physical layer\n");
 		if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
+			printf(DATA_LINK_STR "frame ack was wrong size\n");
 			return -1;
 		}
 		if (!frame.frame.ack) {
+			printf(DATA_LINK_STR "frame ack was not an ack\n");
 			return -1;
 		}
 	}

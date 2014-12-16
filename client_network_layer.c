@@ -120,12 +120,14 @@ int network_send(int socket, uint8_t* data, size_t data_size)
 		packet.packet.ack = false;
 		
 		// send packet through data link layer
+		printf(NETWORK_STR "sending packet through data link layer\n");
 		if (data_link_send_packet(socket, &packet) != sizeof(packet_t))
 		{
 			return -1;
 		}
 
 		// wait for an ACK that this packet got sent
+		printf(NETWORK_STR "waiting for packet ack through data link layer\n");
 		if (data_link_recv_ack_packet(socket) != 0) {
 			return -1;
 		}
