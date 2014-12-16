@@ -15,7 +15,6 @@ typedef union
     	uint8_t seq_num[2];
     	uint8_t data[FRAME_DATA_SIZE];
     	uint8_t data_length;
-    	uint8_t eof;
     	uint8_t error_detect[2];
     } frame;
     uint8_t bytes[sizeof(struct frame)];

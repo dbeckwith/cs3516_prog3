@@ -42,7 +42,6 @@ int data_link_send_packet(int socket, packet_t* packet)
 		memcpy(frame.frame.data, packet.bytes + pos, chunk_len);
 		frame.frame.data_length = chunk_len;
 		frame.frame.ack = false;
-		frame.frame.eof = false;
 
 		// send frame through physical layer
 		if (physical_send_frame(socket, &frame) != sizeof(frame_t))
