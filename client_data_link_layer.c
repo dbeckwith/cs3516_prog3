@@ -33,13 +33,14 @@ int data_link_send_packet(int socket, packet_t* packet)
     unsigned int chunk_len;
 	static seq_t curr_seq_num = 0;
     int recv_err;
-
+    bool last_frame;
     bool first_run;
 
     packet_size = sizeof(packet_t);
     frame_count = 0;
 
     chunk_len = FRAME_DATA_SIZE;
+    last_frame = false;
 
     // split packet into individual frames to send to server
     for (pos = 0; pos < packet_size; pos += FRAME_DATA_SIZE)
@@ -48,6 +49,7 @@ int data_link_send_packet(int socket, packet_t* packet)
         {
             // chunk length is just to end of packet
             chunk_len = packet_size - pos;
+            last_frame = true;
         }
         first_run = true;
         while (true) {
@@ -55,6 +57,7 @@ int data_link_send_packet(int socket, packet_t* packet)
             memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
             frame.frame.data_length = chunk_len;
             frame.frame.seq_num = curr_seq_num;
+            frame.frame.eof = last_frame;
             frame.frame.chksum = gen_chksum(&frame);
 
 	        // send frame through physical layer

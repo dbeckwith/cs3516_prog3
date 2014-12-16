@@ -119,6 +119,10 @@ int data_link_recv_packet(int socket, packet_t* packet)
         photo_log(socket, "ACK frame sent successfully.\n");
 
         INC_SEQ(curr_seq_num);
+        
+        if (frame.frame.eof) {
+            break;
+        }
     }
 
     photo_log(socket, "Packet sent to network layer successfully.\n");

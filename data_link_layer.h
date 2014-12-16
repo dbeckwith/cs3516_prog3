@@ -16,6 +16,7 @@ typedef union
     struct frame
     {
         seq_t seq_num;
+        uint8_t eof;
         uint8_t data_length;
         uint8_t data[FRAME_DATA_SIZE];
         uint16_t chksum;
