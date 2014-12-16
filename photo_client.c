@@ -56,6 +56,7 @@ int main(int argc, char* argv[])
         photo_file_name_len = sprintf(photo_file_name, "%s_%d_%d.%s", PHOTO_STR, client_id, 1 + photo_num, PHOTO_EXT);
         DEBUG(CLIENT_STR "%s\n", photo_file_name);
 
+        printf(CLIENT_STR "Sending photo #%d (%s)\n", photo_num+1, photo_file_name);
         memcpy(send_buff, &photo_file_name_len, sizeof(photo_file_name_len));
         if (network_send(sock, send_buff, sizeof(photo_file_name_len)) != sizeof(photo_file_name_len))
         {
@@ -73,6 +74,8 @@ int main(int argc, char* argv[])
             exit_with_error("Network_send_file");
         }
 
+        printf(CLIENT_STR "Photo sent successfully\n");
+
         if (photo_num == photo_count - 1)
         {
             // Just sent last photo, tell server we're done
@@ -89,7 +92,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    printf(CLIENT_STR "Bye.\n");
+    printf(CLIENT_STR "Done.\n");
     close_photo_log(sock);
     close(sock);
     exit(0);

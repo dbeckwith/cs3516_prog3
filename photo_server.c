@@ -86,6 +86,8 @@ void handle_client(int client_socket)
 
     memcpy(&client_id, recv_buff, sizeof(client_id));
 
+    printf(SERVER_STR "Handling client %d\n", client_id);
+
     sprintf(log_file_name, "server_%d.log", client_id);
     add_photo_log(client_socket, log_file_name);
 
@@ -111,11 +113,15 @@ void handle_client(int client_socket)
         sscanf(photo_file_name, PHOTO_STR "_%d_%d." PHOTO_EXT, &client_id, &photo_id);
         sprintf(photo_file_name, "%s%s_%d_%d.%s", PHOTO_STR, NEW_STR, client_id, photo_id, PHOTO_EXT);
 
+        printf(SERVER_STR "[Client %d]: Receiving photo #%d\n", client_id, photo_id);
+
         // While not DONE or NEXT FILE, keep receving photo packets
         if (network_recv_file(client_socket, photo_file_name) < 0)
         {
             exit_with_error("Network_recv() failed");
         }
+
+        printf(SERVER_STR "[Client %d]: Photo saved to %s\n", client_id, photo_file_name);
 
         if (network_recv(client_socket, recv_buff, 1) != 1)
         {

@@ -62,7 +62,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 
 	        // wait for ACK frame
 	        DEBUG(DATA_LINK_STR "waiting for frame ack through physical layer\n");
-	        if ((recv_err = physical_recv_frame(socket, &frame)) != sizeof(frame_t)) {
+	        if ((recv_err = physical_recv_frame(socket, &frame, true)) != sizeof(frame_t)) {
 	            DEBUG(DATA_LINK_STR "error receiving frame ack\n");
 	            if (recv_err == ERR_TIMEOUT) {
 	            	DEBUG(DATA_LINK_STR "timeout waiting for ack frame\n");
@@ -111,7 +111,7 @@ int data_link_recv_ack_packet(int socket)
 {
     frame_t frame;
 
-    if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
+    if (physical_recv_frame(socket, &frame, true) != sizeof(frame_t)) {
         return -1;
     }
     photo_log(socket, "ACK packet frame %d received successfully.\n", packet_count);

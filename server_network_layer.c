@@ -48,10 +48,13 @@ int network_recv_file(int socket, char* file_name)
             return bytes_received;
         }
     }
+    DEBUG(NETWORK_STR "Closing file\n");
     if (fclose(output) < 0)
     {
+        DEBUG(NETWORK_STR "Close failed\n");
         return -1;
     }
+    DEBUG(NETWORK_STR "File closed\n");
     return bytes_received;
 }
 

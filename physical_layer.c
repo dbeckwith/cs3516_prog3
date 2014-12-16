@@ -107,35 +107,35 @@ int physical_send_frame(int socket, frame_t* frame)
 */
 int recv_to(int fd, char *buffer, int len, int flags, int to) {
 
-   fd_set readset;
-   int result, iof = -1;
-   struct timeval tv;
+    fd_set readset;
+    int result, iof = -1;
+    struct timeval tv;
 
-   // Initialize the set
-   FD_ZERO(&readset);
-   FD_SET(fd, &readset);
-   
-   // Initialize time out struct
-   tv.tv_sec = 0;
-   tv.tv_usec = to * 1000;
-   // select()
-   result = select(fd+1, &readset, NULL, NULL, &tv);
+    // Initialize the set
+    FD_ZERO(&readset);
+    FD_SET(fd, &readset);
 
-   // Check status
-   if (result < 0)
-      return -1;
-   else if (result > 0 && FD_ISSET(fd, &readset)) {
-      // Set non-blocking mode
-      if ((iof = fcntl(fd, F_GETFL, 0)) != -1)
-         fcntl(fd, F_SETFL, iof | O_NONBLOCK);
-      // receive
-      result = recv(fd, buffer, len, flags);
-      // set as before
-      if (iof != -1)
-         fcntl(fd, F_SETFL, iof);
-      return result;
-   }
-   return -2;
+    // Initialize time out struct
+    tv.tv_sec = 0;
+    tv.tv_usec = to * 1000;
+    // select()
+    result = select(fd+1, &readset, NULL, NULL, &tv);
+
+    // Check status
+    if (result < 0)
+        return -1;
+    else if (result > 0 && FD_ISSET(fd, &readset)) {
+        // Set non-blocking mode
+        if ((iof = fcntl(fd, F_GETFL, 0)) != -1)
+            fcntl(fd, F_SETFL, iof | O_NONBLOCK);
+        // receive
+        result = recv(fd, buffer, len, flags);
+        // set as before
+        if (iof != -1)
+            fcntl(fd, F_SETFL, iof);
+        return result;
+    }
+    return -2;
 }
 
 /*
@@ -145,7 +145,7 @@ int recv_to(int fd, char *buffer, int len, int flags, int to) {
  * @param buffer_size The size of the buffer to receive into
  * @return Result of recv()
  */
-int physical_recv_frame(int socket, frame_t* frame)
+int physical_recv_frame(int socket, frame_t* frame, bool timeout)
 {
     int pos;
     size_t frame_size;
@@ -155,9 +155,17 @@ int physical_recv_frame(int socket, frame_t* frame)
 
     for (pos = 0; pos < frame_size; pos += chunk_size) {
         DEBUG(PHYSICAL_STR "receiving frame segment from actual network layer\n");
-        if ((chunk_size = recv_to(socket, frame->bytes + pos, frame_size - pos, 0, TIMEOUT)) <= 0) {
-            DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
-            return chunk_size;
+        if (timeout) {
+            if ((chunk_size = recv_to(socket, frame->bytes + pos, frame_size - pos, 0, TIMEOUT)) <= 0) {
+                DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
+                return chunk_size;
+            }
+        }
+        else {
+            if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0) {
+                DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
+                return chunk_size;
+            }
         }
     }
     DEBUG(PHYSICAL_STR "done receiving frame from actual network layer\n");

@@ -53,7 +53,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
     {
     	while (true) {
             DEBUG(DATA_LINK_STR "Receiving physical frame\n");
-	        if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
+	        if (physical_recv_frame(socket, &frame, false) != sizeof(frame_t))
 	        {
                 DEBUG(DATA_LINK_STR "Error receiving data frame\n");
 	            return -1;
