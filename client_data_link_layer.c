@@ -34,7 +34,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 	static seq_t curr_seq_num = 0;
     int recv_err;
 
-    bool first_run = true;
+    bool first_run;
 
     packet_size = sizeof(packet_t);
     frame_count = 0;
@@ -49,7 +49,7 @@ int data_link_send_packet(int socket, packet_t* packet)
             // chunk length is just to end of packet
             chunk_len = packet_size - pos;
         }
-
+        first_run = true;
         while (true) {
             // copy packet bytes into frame data
             memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
@@ -62,6 +62,7 @@ int data_link_send_packet(int socket, packet_t* packet)
             if (!first_run)
             {
                 photo_log(socket, "Frame %d of packet %d being resent.\n", frame_count, packet_count);
+                frame_retransmissions++;
             }
             first_run = false;
 	        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
@@ -71,6 +72,7 @@ int data_link_send_packet(int socket, packet_t* packet)
 
             frame_count++;
 	        photo_log(socket, "Frame %d of packet %d sent successfully.\n", frame_count, packet_count);
+            frames_sent++;
 
 	        // wait for ACK frame
 	        DEBUG(DATA_LINK_STR "waiting for frame ack through physical layer\n");
@@ -88,6 +90,7 @@ int data_link_send_packet(int socket, packet_t* packet)
             if (frame.frame.chksum != gen_chksum(&frame)) {
                 DEBUG(DATA_LINK_STR "frame ack checksum failed\n");
                 photo_log(socket, "Frame %d ACK checksum failed\n", frame_count);
+                bad_acks++;
                 continue;
             }
 
@@ -100,10 +103,13 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        if (frame.frame.seq_num != curr_seq_num) {
             	DEBUG(DATA_LINK_STR "ack frame was wrong sequence number\n");
                 photo_log(socket, "Frame %d ACK sequence error\n", frame_count);
+                bad_acks++;
 	        	continue;
 	        }
 
 	        DEBUG(DATA_LINK_STR "ack frame accepted\n");
+            photo_log(socket, "Frame %d ACKed successfully.\n", frame_count);
+            good_acks++;
 	        break;
 	    }
 
