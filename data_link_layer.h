@@ -11,7 +11,6 @@ typedef union
 {
     struct frame
     {
-        uint8_t ack;
         uint8_t seq_num[2];
         uint8_t data[FRAME_DATA_SIZE];
         uint8_t data_length;

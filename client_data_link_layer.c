@@ -41,7 +41,6 @@ int data_link_send_packet(int socket, packet_t* packet)
         // copy packet bytes into frame data
         memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
         frame.frame.data_length = chunk_len;
-        frame.frame.ack = false;
 
         // send frame through physical layer
         if (DEBUG) printf(DATA_LINK_STR "sending frame through physical layer\n");
@@ -58,7 +57,7 @@ int data_link_send_packet(int socket, packet_t* packet)
             if (DEBUG) printf(DATA_LINK_STR "frame ack was wrong size\n");
             return -1;
         }
-        if (!frame.frame.ack) {
+        if (!IS_ACK_FRAME(frame.frame)) {
             if (DEBUG) printf(DATA_LINK_STR "frame ack was not an ack\n");
             return -1;
         }
@@ -81,7 +80,7 @@ int data_link_recv_ack_packet(int socket)
         return -1;
     }
     photo_log(socket, "ACK packet frame %d received successfully.\n", packet_count);
-    if (!frame.frame.ack) {
+    if (!IS_ACK_FRAME(frame.frame)) {
         return -1;
     }
     return 0;

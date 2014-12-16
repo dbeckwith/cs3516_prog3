@@ -21,7 +21,6 @@
 int data_link_send_ack_packet(int socket)
 {
     frame_t frame;
-    frame.frame.ack = true;
     frame.frame.data_length = 0;
 
     if (physical_send_frame(socket, &frame) != sizeof(frame_t))
@@ -63,7 +62,6 @@ int data_link_recv_packet(int socket, packet_t* packet)
         }
         memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
 
-        frame.frame.ack = true;
         frame.frame.data_length = 0;
 
         if (physical_send_frame(socket, &frame) != sizeof(frame_t))

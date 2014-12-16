@@ -60,7 +60,6 @@ int network_send_file(int socket, char* file_name)
             packet.packet.eof = *curr_read_size == 0;
             memcpy(packet.packet.data, prev_read_buffer, *prev_read_size);
             packet.packet.data_length = *prev_read_size;
-            packet.packet.ack = false;
 
             packet_count++;
             // send packet through data link layer
@@ -126,7 +125,6 @@ int network_send(int socket, uint8_t* data, size_t data_size)
         memcpy(packet.packet.data, data + pos, chunk_len);
         packet.packet.data_length = chunk_len;
         packet.packet.eof = false;
-        packet.packet.ack = false;
         
         packet_count++;
 
