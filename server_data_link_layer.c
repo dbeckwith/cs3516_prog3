@@ -44,6 +44,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
     unsigned int chunk_len;
     size_t packet_size;
     frame_t frame;
+    frame_t prev_frame;
     static seq_t curr_seq_num = 0;
 
     packet_size = sizeof(packet_t);
@@ -51,29 +52,60 @@ int data_link_recv_packet(int socket, packet_t* packet)
     for (pos = 0; pos < packet_size; pos += chunk_len)
     {
     	while (true) {
+            DEBUG(DATA_LINK_STR "Receiving physical frame\n");
 	        if (physical_recv_frame(socket, &frame) != sizeof(frame_t))
 	        {
+                DEBUG(DATA_LINK_STR "Error receiving data frame\n");
 	            return -1;
 	        }
 
+            DEBUG(DATA_LINK_STR "Checking checksum\n");
             if (frame.frame.chksum != gen_chksum(&frame)) {
+                photo_log(socket, "Frame checksum error detected.\n");
                 continue;
             }
 
+            DEBUG(DATA_LINK_STR "Checking seq num\n");
 	        if (frame.frame.seq_num != curr_seq_num) {
+                DEBUG(DATA_LINK_STR "Frame sequence number error detected\n");
+                photo_log(socket, "Frame sequence number error detected.\n");
+                if (pos == 0) {
+                    DEBUG(DATA_LINK_STR "Frame sequence mismatch error detected\n");
+                    return -1;
+                }
+                else if (memcmp(&frame, &prev_frame, sizeof(frame_t)) == 0) {
+                    DEBUG(DATA_LINK_STR "Duplicate frame detected\n");
+                    photo_log(socket, "Duplicate frame detected.\n");
+
+                    // send duplicate ACK
+                    frame.frame.data_length = 0;
+                    // same seq number as just received frame, the duplicate
+                    frame.frame.chksum = gen_chksum(&frame);
+
+                    if (physical_send_frame(socket, &frame) != sizeof(frame_t))
+                    {
+                        DEBUG(DATA_LINK_STR "Error resending ACK frame\n");
+                        return -1;
+                    }
+                    photo_log(socket, "ACK frame resent successfully.\n");
+                }
 	        	continue;
 	        }
 	        break;
 	    }
 
+        DEBUG(DATA_LINK_STR "Frame received successfully\n");
         photo_log(socket, "Frame received successfully.\n");
 
         chunk_len = frame.frame.data_length;
         if (pos + chunk_len > packet_size)
         {
+            DEBUG(DATA_LINK_STR "ERROR: Received too many bytes to make a packet\n");
             return -1;
         }
         memcpy(packet->bytes + pos, frame.frame.data, chunk_len);
+
+        memcpy(&prev_frame, &frame, sizeof(frame_t));
 
         frame.frame.data_length = 0;
         frame.frame.seq_num = curr_seq_num;
@@ -81,6 +113,7 @@ int data_link_recv_packet(int socket, packet_t* packet)
 
         if (physical_send_frame(socket, &frame) != sizeof(frame_t))
         {
+            DEBUG(DATA_LINK_STR "Error sending ACK frame\n");
             return -1;
         }
         photo_log(socket, "ACK frame sent successfully.\n");

@@ -8,6 +8,8 @@
 
 #define PHYSICAL_STR "[PHYSICAL LAYER]: " // String to display for debugging at physical layer
 
+#define ERR_TIMEOUT -2
+
 // Function definitions
 
 int physical_connect(char *serverName, unsigned short serverPort);

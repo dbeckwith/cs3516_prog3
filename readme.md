@@ -38,5 +38,5 @@ Performance Timing:
 
 
 http://www.isthe.com/chongo/tech/comp/fnv/
-
+http://developerweb.net/viewtopic.php?id=2933   (second code example)
 

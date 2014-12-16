@@ -27,6 +27,7 @@ int data_link_send_packet(int socket, packet_t* packet)
     unsigned int pos;
     unsigned int chunk_len;
 	static seq_t curr_seq_num = 0;
+    int recv_err;
 
     packet_size = sizeof(packet_t);
     frame_count = 0;
@@ -41,13 +42,14 @@ int data_link_send_packet(int socket, packet_t* packet)
             // chunk length is just to end of packet
             chunk_len = packet_size - pos;
         }
-        // copy packet bytes into frame data
-        memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
-        frame.frame.data_length = chunk_len;
-        frame.frame.seq_num = curr_seq_num;
-        frame.frame.chksum = gen_chksum(&frame);
 
         while (true) {
+            // copy packet bytes into frame data
+            memcpy(frame.frame.data, packet->bytes + pos, chunk_len);
+            frame.frame.data_length = chunk_len;
+            frame.frame.seq_num = curr_seq_num;
+            frame.frame.chksum = gen_chksum(&frame);
+
 	        // send frame through physical layer
 	        DEBUG(DATA_LINK_STR "sending frame through physical layer\n");
 	        if (physical_send_frame(socket, &frame) != sizeof(frame_t))
@@ -55,14 +57,16 @@ int data_link_send_packet(int socket, packet_t* packet)
 	            return -1;
 	        }
 
-	        photo_log(socket, "Frame %d of packet %d sent successfully.\n", ++frame_count, packet_count);
+            frame_count++;
+	        photo_log(socket, "Frame %d of packet %d sent successfully.\n", frame_count, packet_count);
 
 	        // wait for ACK frame
 	        DEBUG(DATA_LINK_STR "waiting for frame ack through physical layer\n");
-	        if (physical_recv_frame(socket, &frame) != sizeof(frame_t)) {
+	        if ((recv_err = physical_recv_frame(socket, &frame)) != sizeof(frame_t)) {
 	            DEBUG(DATA_LINK_STR "error receiving frame ack\n");
-	            if (errno == EAGAIN || errno == EWOULDBLOCK) {
-	            	DEBUG(DATA_LINK_STR "timeout waiting for ack frame");
+	            if (recv_err == ERR_TIMEOUT) {
+	            	DEBUG(DATA_LINK_STR "timeout waiting for ack frame\n");
+                    photo_log(socket, "Frame %d ACK timed out\n", frame_count);
 	            	// timeout
 	            	continue;
 	            }
@@ -70,7 +74,8 @@ int data_link_send_packet(int socket, packet_t* packet)
 	        }
 
             if (frame.frame.chksum != gen_chksum(&frame)) {
-                DEBUG(DATA_LINK_STR "frame ack checksum failed");
+                DEBUG(DATA_LINK_STR "frame ack checksum failed\n");
+                photo_log(socket, "Frame %d ACK checksum failed\n", frame_count);
                 continue;
             }
 
@@ -81,7 +86,8 @@ int data_link_send_packet(int socket, packet_t* packet)
 
 	        // check ACK's seq num
 	        if (frame.frame.seq_num != curr_seq_num) {
-            	DEBUG(DATA_LINK_STR "ack frame was wrong sequence number");
+            	DEBUG(DATA_LINK_STR "ack frame was wrong sequence number\n");
+                photo_log(socket, "Frame %d ACK sequence error\n", frame_count);
 	        	continue;
 	        }
 

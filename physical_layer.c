@@ -5,15 +5,13 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <sys/time.h>
+#include <fcntl.h>
 #include "util.h"
 #include "photo.h"
 #include "physical_layer.h"
 
-void set_phys_timeout()
-{
-    PHYS_TIMEOUT.tv_sec = 1;
-    PHYS_TIMEOUT.tv_usec = 0;
-}
+#define TIMEOUT 1000
 
 /*
  * @brief Converts hostname and port number to IP address and connects socket
@@ -74,9 +72,6 @@ int physical_connect(char *serverName, unsigned short serverPort)
 
     printf(PHYSICAL_STR "Connected to server at %s\n", inet_ntoa(((struct sockaddr_in *)serverAddr)->sin_addr));
 
-    set_phys_timeout();
-
-    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, &PHYS_TIMEOUT, sizeof(struct timeval));
     return serverSocket;
 
 }
@@ -90,8 +85,57 @@ int physical_connect(char *serverName, unsigned short serverPort)
  */
 int physical_send_frame(int socket, frame_t* frame)
 {
+    DEBUG(PHYSICAL_STR "sending frame segment to actual network layer\n");
     physical_error(socket, frame);
     return send(socket, frame->bytes, sizeof(frame_t), 0);
+}
+
+/*
+   Params:
+      fd       -  (int) socket file descriptor
+      buffer - (char*) buffer to hold data
+      len     - (int) maximum number of bytes to recv()
+      flags   - (int) flags (as the fourth param to recv() )
+      to       - (int) timeout in milliseconds
+   Results:
+      int      - The same as recv, but -2 == TIMEOUT
+   Notes:
+      You can only use it on file descriptors that are sockets!
+      'to' must be different to 0
+      'buffer' must not be NULL and must point to enough memory to hold at least 'len' bytes
+      I WILL mix the C and C++ commenting styles...
+*/
+int recv_to(int fd, char *buffer, int len, int flags, int to) {
+
+   fd_set readset;
+   int result, iof = -1;
+   struct timeval tv;
+
+   // Initialize the set
+   FD_ZERO(&readset);
+   FD_SET(fd, &readset);
+   
+   // Initialize time out struct
+   tv.tv_sec = 0;
+   tv.tv_usec = to * 1000;
+   // select()
+   result = select(fd+1, &readset, NULL, NULL, &tv);
+
+   // Check status
+   if (result < 0)
+      return -1;
+   else if (result > 0 && FD_ISSET(fd, &readset)) {
+      // Set non-blocking mode
+      if ((iof = fcntl(fd, F_GETFL, 0)) != -1)
+         fcntl(fd, F_SETFL, iof | O_NONBLOCK);
+      // receive
+      result = recv(fd, buffer, len, flags);
+      // set as before
+      if (iof != -1)
+         fcntl(fd, F_SETFL, iof);
+      return result;
+   }
+   return -2;
 }
 
 /*
@@ -111,11 +155,12 @@ int physical_recv_frame(int socket, frame_t* frame)
 
     for (pos = 0; pos < frame_size; pos += chunk_size) {
         DEBUG(PHYSICAL_STR "receiving frame segment from actual network layer\n");
-        if ((chunk_size = recv(socket, frame->bytes + pos, frame_size - pos, 0)) <= 0) {
-            DEBUG(PHYSICAL_STR "actual receive failed\n");
-            return -1;
+        if ((chunk_size = recv_to(socket, frame->bytes + pos, frame_size - pos, 0, TIMEOUT)) <= 0) {
+            DEBUG(PHYSICAL_STR "actual receive failed: %d\n", chunk_size);
+            return chunk_size;
         }
     }
+    DEBUG(PHYSICAL_STR "done receiving frame from actual network layer\n");
 
     return frame_size;
 }

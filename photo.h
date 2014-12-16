@@ -8,6 +8,4 @@
 #define NEW_STR "new"
 #define PHOTO_EXT "jpg"
 
-struct timeval PHYS_TIMEOUT;
-
 #endif
